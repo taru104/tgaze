@@ -24,6 +24,7 @@ dependencies = [
     "mediapipe>=0.10",
     "scikit-learn>=1.3",
     "scipy>=1.10",
+    "pyobjc-framework-AVFoundation; sys_platform == 'darwin'",   # センターフレームを切る
 ]
 
 [project.urls]
@@ -44,5 +45,5 @@ Repository = "https://github.com/taru104/tgaze"
 packages = ["tgaze"]
 py-modules = [
     "features", "rich16d", "appearance", "calibration",
-    "estimator", "estimator_appearance", "filters", "config",
+    "estimator", "estimator_appearance", "filters", "config", "macos",
 ]

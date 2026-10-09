@@ -3,6 +3,7 @@
 Webカメラから視線推定し、画面上にガゼポイントを表示する。
 ｌｌ
 FF
+    F           : 全画面 切替
     Q/ESC       : 終了
 """
 
@@ -17,6 +18,7 @@ from typing import Optional, Tuple
 from estimator   import GazeEstimator
 from calibration import CALIB_POINTS_9
 from raw_landmark_logger import RawLandmarkLogger
+from macos import disable_center_stage, place_window_on_main_display
 
 
 # ──── UI 定数 ────────────────────────────────────────────────────────────────
@@ -32,14 +34,14 @@ CALIB_TOTAL   = 3.0   # 各点の注視時間 (秒)
 CALIB_DISCARD = 1.0   # 最初の破棄時間 (秒)
 MULTIPOSE_TOTAL = 12.0  # 多姿勢モード: 各点で頭を振りながら収集する時間 (秒)
 
-SCREEN_CM_W = 30.9    # 画面の物理横幅 (cm)
-SCREEN_CM_H = 17.4    # 画面の物理縦幅 (cm)
+# 画面の物理サイズ(cm)と窓サイズは機種ごとに config.py で設定
+from config import SCREEN_CM_W, SCREEN_CM_H, SCREEN_PX_W, SCREEN_PX_H, WINDOW_W, WINDOW_H
 
 
 class GazeApp:
     """視線推定アプリ本体。"""
 
-    def __init__(self, cam_id: int = 0, win_w: int = 1280, win_h: int = 720,
+    def __init__(self, cam_id: int = 0, win_w: int = WINDOW_W, win_h: int = WINDOW_H,
                  use_appearance: Optional[bool] = None):
         self.win_w = win_w
         self.win_h = win_h
@@ -59,6 +61,7 @@ class GazeApp:
         else:
             self.estimator = GazeEstimator()
 
+        disable_center_stage()   # macOS: 顔追従ズームでカメラ行列が変わるのを防ぐ
         self.cap = cv2.VideoCapture(cam_id)
         if not self.cap.isOpened():
             raise RuntimeError(f"カメラ {cam_id} を開けません。")
@@ -113,6 +116,7 @@ class GazeApp:
     def run(self):
         cv2.namedWindow('Gaze Estimation', cv2.WINDOW_NORMAL)
         cv2.resizeWindow('Gaze Estimation', self.win_w, self.win_h)
+        place_window_on_main_display('Gaze Estimation', self.win_w)
         cv2.setMouseCallback('Gaze Estimation', self._on_mouse)
 
         canvas = np.zeros((self.win_h, self.win_w, 3), dtype=np.uint8)
@@ -165,6 +169,10 @@ class GazeApp:
                 print("[INFO] キャリブレーションリセット")
             elif key == ord('d'):
                 self._debug_mode = not self._debug_mode
+            elif key == ord('f'):
+                full = cv2.getWindowProperty('Gaze Estimation', cv2.WND_PROP_FULLSCREEN) == cv2.WINDOW_FULLSCREEN
+                cv2.setWindowProperty('Gaze Estimation', cv2.WND_PROP_FULLSCREEN,
+                                      cv2.WINDOW_NORMAL if full else cv2.WINDOW_FULLSCREEN)
 
         self.estimator.close()
         self.cap.release()
@@ -344,6 +352,16 @@ class GazeApp:
             cv2.putText(canvas, f"P{math.degrees(pitch):+.0f} Y{math.degrees(yaw):+.0f}deg",
                         (10, 8 + ph - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.42, col, 1)
 
+    def _view_cm(self) -> Tuple[float, float]:
+        """いまの窓(描画領域)の物理サイズ cm。窓でも全画面でも誤差を正しく cm 換算するため。"""
+        try:
+            _, _, ww, wh = cv2.getWindowImageRect('Gaze Estimation')
+            if ww > 0 and wh > 0:
+                return ww * SCREEN_CM_W / SCREEN_PX_W, wh * SCREEN_CM_H / SCREEN_PX_H
+        except cv2.error:
+            pass
+        return SCREEN_CM_W, SCREEN_CM_H
+
     def _draw_hud(self, canvas: np.ndarray, debug: Optional[dict]):
         w, h = self.win_w, self.win_h
 
@@ -358,8 +376,9 @@ class GazeApp:
             cal = self.estimator.calibration
             n   = cal.n_samples
             if cal.loo_euc_x is not None:
-                err_x_cm = cal.loo_euc_x * SCREEN_CM_W
-                err_y_cm = cal.loo_euc_y * SCREEN_CM_H
+                view_w_cm, view_h_cm = self._view_cm()
+                err_x_cm = cal.loo_euc_x * view_w_cm
+                err_y_cm = cal.loo_euc_y * view_h_cm
                 import math
                 euc_cm   = math.sqrt(err_x_cm**2 + err_y_cm**2)
                 err_str  = (f"  [LOO: {euc_cm:.1f}cm  "
@@ -434,8 +453,9 @@ class GazeApp:
         import math
         cal = self.estimator.calibration
         if cal.loo_euc_x is not None:
-            loo_x_cm   = cal.loo_euc_x * SCREEN_CM_W
-            loo_y_cm   = cal.loo_euc_y * SCREEN_CM_H
+            view_w_cm, view_h_cm = self._view_cm()
+            loo_x_cm   = cal.loo_euc_x * view_w_cm
+            loo_y_cm   = cal.loo_euc_y * view_h_cm
             loo_euc_cm = math.sqrt(loo_x_cm**2 + loo_y_cm**2)
             loo_mgae_s = f"{cal.loo_mgae:.3f}"
             loo_euc_s  = f"{loo_euc_cm:.3f}"
@@ -504,7 +524,7 @@ class GazeApp:
 if __name__ == '__main__':
     cam_id = int(sys.argv[1]) if len(sys.argv) > 1 else 0
     try:
-        app = GazeApp(cam_id=cam_id, win_w=1280, win_h=720)
+        app = GazeApp(cam_id=cam_id)
         app.run()
     except RuntimeError as e:
         print(f"[ERROR] {e}")
