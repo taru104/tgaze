@@ -21,7 +21,6 @@ if str(_ROOT) not in sys.path:
 
 from estimator_appearance import AppearanceEstimator   # noqa: E402
 from estimator import GazeEstimator                    # noqa: E402
-from macos import disable_center_stage            # noqa: E402
 
 # 既定の9点(時計回り・最後が中央)。main.py の calibration.CALIB_POINTS_9 と同じ考え方。
 NINE_POINTS: Tuple[Tuple[float, float], ...] = (
@@ -105,7 +104,6 @@ class GazeTracker:
         自前UIを持つアプリは代わりに `add_calibration_sample()` + `fit()` を使う。
         """
         import cv2
-        disable_center_stage()
         cap = cv2.VideoCapture(camera)
         if not cap.isOpened():
             raise RuntimeError(f"カメラ {camera} を開けませんでした")

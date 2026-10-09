@@ -4,9 +4,7 @@
   python main_camK.py --no-k     # 1280x720 + 従来の f=画像幅（解像度だけの効果を見る）
   python main.py                 # 従来 640x480 + f=画像幅（基準）
 
-  実測Kは results/camera_calib/<機種名>/<WxH>/ から自動で探す(benchmarks/calibrate_camera.py capture の保存先)。
-  無ければ従来の results/camera_calib/<WxH>/ (dynabook で測ったK)を、測ったPC(host一致)でだけ使う。
-  どちらも無ければ f=画像幅 になる。
+  同梱Kは測ったPC(host一致)でだけ自動使用。別PC(Mac等)では自動で f=画像幅 になる。
 
 HUD の [LOO] と画面外率を3条件で比べる。生ランドマークは logs/ に残るので、
 同じ1280x720セッションで K あり/なしをオフライン再計算して比べることもできる。
@@ -20,7 +18,6 @@ from pathlib import Path
 import cv2
 
 import rich16d
-from config import machine_id
 from main import GazeApp
 
 ROOT = Path(__file__).parent
@@ -34,17 +31,14 @@ if __name__ == '__main__':
     ap.add_argument('--k-json', default=None)
     a = ap.parse_args()
 
-    calib_dir = ROOT / 'results' / 'camera_calib'
-    size_dir = f'{a.width}x{a.height}'
-    own = calib_dir / machine_id() / size_dir / 'camera_matrix.json'   # この機種で測ったK
-    path = Path(a.k_json) if a.k_json else (own if own.exists() else calib_dir / size_dir / 'camera_matrix.json')
+    path = Path(a.k_json) if a.k_json else ROOT / 'results' / 'camera_calib' / f'{a.width}x{a.height}' / 'camera_matrix.json'
     if not a.no_k and not a.k_json and not path.exists():
-        print(f"[camK] {own} が無いので実測Kなし(f=画像幅)で起動")
+        print(f"[camK] {path} が無いので実測Kなし(f=画像幅)で起動")
         a.no_k = True
     if not a.no_k and not a.k_json:
-        # 測ったPC以外では自動で使わない(同梱の 1280x720 K は dynabook 内蔵カメラ用)
+        # 同梱の 1280x720 K は dynabook 内蔵カメラ用。測ったPC以外では自動で使わない
         host = json.loads(path.read_text(encoding='utf-8')).get('host')
-        if host not in (machine_id(), platform.node()):
+        if host != platform.node():
             print(f"[camK] {path.name} は別PC({host})で測ったKなので使わない(f=画像幅で起動)")
             a.no_k = True
     if not a.no_k:
@@ -58,7 +52,7 @@ if __name__ == '__main__':
         print("[camK] 実測Kなし (f=画像幅)")
 
     try:
-        app = GazeApp(cam_id=a.cam)
+        app = GazeApp(cam_id=a.cam, win_w=1280, win_h=720)
         cap = app.cap
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))  # 720pの30fpsはMJPGのみ(YUY2は10fps)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, a.width)

@@ -11,9 +11,9 @@ OSはこのカメラの内部パラメータを持っていない(WinRT try_get_
      画面: 緑の点=検出コーナー。ボードを色々な位置・距離・傾きで見せると自動で撮る。
      [SPACE]手動撮影 [C]計算して保存 [Q]中止。25枚程度で十分。
   3) 撮った画像から再計算だけしたい時
-       python benchmarks/calibrate_camera.py solve --square-mm 30.0 --dir results/camera_calib/<機種名>/640x480
+       python benchmarks/calibrate_camera.py solve --square-mm 30.0 --dir results/camera_calib/640x480
 
-出力: results/camera_calib/<機種名>/<WxH>/camera_matrix.json （K, 歪み, 再投影誤差, 画角）
+出力: results/camera_calib/<WxH>/camera_matrix.json （K, 歪み, 再投影誤差, 画角）
 既定はアプリ(main.py)と同じ cv2.VideoCapture(0) の 640x480。
 """
 import argparse
@@ -21,16 +21,12 @@ import glob
 import json
 import os
 import platform
-import sys
 import time
 
 import cv2
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, ROOT)
-from config import machine_id  # noqa: E402
-from macos import disable_center_stage  # noqa: E402
 SQUARES_X, SQUARES_Y = 7, 5          # A4横に30mmマスで収まる
 MARKER_RATIO = 0.75
 DICT = cv2.aruco.DICT_5X5_100
@@ -63,8 +59,6 @@ def cmd_board(args):
 
 def detect(detector, gray):
     cc, ci, mc, mi = detector.detectBoard(gray)
-    if cc is not None:
-        cc = cc.reshape(-1, 1, 2)   # OpenCV 5 は (N,2) で返す。描画関数などは 4.x と同じ (N,1,2) を要求
     return cc, ci
 
 
@@ -103,8 +97,8 @@ def solve(img_paths, square_mm, label=""):
     fx, fy, cx, cy = K[0, 0], K[1, 1], K[0, 2], K[1, 2]
     dists = [float(np.linalg.norm(t)) for t in tvecs]
     res = {
-        "host": machine_id(),
-        "camera": label or f"{machine_id()} ({platform.platform()})",
+        "host": platform.node(),
+        "camera": label or f"{platform.node()} ({platform.platform()})",
         "image_size": [w, h],
         "K": K.tolist(),
         "fx": fx, "fy": fy, "cx": cx, "cy": cy,
@@ -146,14 +140,12 @@ def report(r, out):
 
 def cmd_capture(args):
     w, h = args.width, args.height
-    # 機種ごとに分ける(別PCで測ったKや撮影画像を上書きしない)。main_camK.py はここを探す
-    out_dir = os.path.join(ROOT, "results", "camera_calib", machine_id(), f"{w}x{h}")
+    out_dir = os.path.join(ROOT, "results", "camera_calib", f"{w}x{h}")
     os.makedirs(out_dir, exist_ok=True)
     for p in glob.glob(os.path.join(out_dir, "img_*.png")):
         os.remove(p)
     board = make_board(args.square_mm)
     detector = cv2.aruco.CharucoDetector(board)
-    disable_center_stage()   # macOS: 顔追従ズーム中はKが一定にならない
     cap = cv2.VideoCapture(args.cam)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, w)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
