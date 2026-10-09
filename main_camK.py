@@ -4,13 +4,14 @@
   python main_camK.py --no-k     # 1280x720 + 従来の f=画像幅（解像度だけの効果を見る）
   python main.py                 # 従来 640x480 + f=画像幅（基準）
 
-  別PC(Mac等)では同梱Kはそのカメラ用ではないので必ず --no-k（例: --width 1920 --height 1080 --no-k）。
+  同梱Kは測ったPC(host一致)でだけ自動使用。別PC(Mac等)では自動で f=画像幅 になる。
 
 HUD の [LOO] と画面外率を3条件で比べる。生ランドマークは logs/ に残るので、
 同じ1280x720セッションで K あり/なしをオフライン再計算して比べることもできる。
 """
 import argparse
 import json
+import platform
 import sys
 from pathlib import Path
 
@@ -34,8 +35,13 @@ if __name__ == '__main__':
     if not a.no_k and not a.k_json and not path.exists():
         print(f"[camK] {path} が無いので実測Kなし(f=画像幅)で起動")
         a.no_k = True
+    if not a.no_k and not a.k_json:
+        # 同梱の 1280x720 K は dynabook 内蔵カメラ用。測ったPC以外では自動で使わない
+        host = json.loads(path.read_text(encoding='utf-8')).get('host')
+        if host != platform.node():
+            print(f"[camK] {path.name} は別PC({host})で測ったKなので使わない(f=画像幅で起動)")
+            a.no_k = True
     if not a.no_k:
-        # 注意: 同梱の 1280x720 K は dynabook 内蔵カメラ用。別PCでは --no-k か自分のKを --k-json で渡す
         calib = json.loads(path.read_text(encoding='utf-8'))
         if tuple(calib['image_size']) != (a.width, a.height):
             sys.exit(f"[ERROR] K は {calib['image_size']} 用。解像度 {a.width}x{a.height} とは合わない")

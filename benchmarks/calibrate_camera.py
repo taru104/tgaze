@@ -97,6 +97,7 @@ def solve(img_paths, square_mm, label=""):
     fx, fy, cx, cy = K[0, 0], K[1, 1], K[0, 2], K[1, 2]
     dists = [float(np.linalg.norm(t)) for t in tvecs]
     res = {
+        "host": platform.node(),
         "camera": label or f"{platform.node()} ({platform.platform()})",
         "image_size": [w, h],
         "K": K.tolist(),
