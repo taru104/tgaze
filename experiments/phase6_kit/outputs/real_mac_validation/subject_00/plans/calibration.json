@@ -1,0 +1,186 @@
+{
+ "session": "calibration",
+ "created": "2026-10-12T00:14:40",
+ "slots": [
+  {
+   "slot_id": "cal_000",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.7,
+    -0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_001",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.7,
+    -0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_002",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_003",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.7,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_004",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.7,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_005",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.7,
+    -0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_006",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.7,
+    -0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_007",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.7,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_008",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_009",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.7,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_010",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    -0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_011",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.7,
+    0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_012",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.7,
+    0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_013",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.7,
+    0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_014",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_015",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    -0.7
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_016",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "cal_017",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.7,
+    0.7
+   ],
+   "visible_in_window": true
+  }
+ ]
+}

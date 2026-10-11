@@ -1,0 +1,468 @@
+[
+ {
+  "subject_id": "subject_00",
+  "role": "pilot",
+  "fake_camera": false,
+  "status_counts": {
+   "calibration": {
+    "VALID": 18
+   },
+   "evaluation": {
+    "RETAKE_RECOMMENDED": 9,
+    "VALID": 66,
+    "INVALID": 1
+   }
+  },
+  "n_eval_trials_used": 75,
+  "n_eval_trials_planned_slots": 75,
+  "n_cal_trials_used": 18,
+  "head_pose_reference_pitch_yaw_deg": [
+   -0.6357027888298035,
+   21.42223358154297
+  ],
+  "calibration_fit_ms_analysis": {
+   "0": 0.011208991054445505,
+   "1": 0.05854098708368838,
+   "3": 0.08708401583135128,
+   "5": 0.05983401206322014,
+   "9": 0.06054199184291065
+  },
+  "tgaze_9pt_fit_ms_analysis": 1549.9177910096478,
+  "calibration_fit_on_device": {
+   "fitted": "2026-10-12T00:15:29",
+   "models": {
+    "1": {
+     "kind": "bias",
+     "lambda_cm2": 0.0,
+     "A": [
+      [
+       1.0,
+       0.0
+      ],
+      [
+       0.0,
+       1.0
+      ]
+     ],
+     "b_cm": [
+      0.6155848256871104,
+      -1.3139643550850448
+     ],
+     "W_poly": null,
+     "fit_ms": 0.10320800356566906
+    },
+    "3": {
+     "kind": "affine",
+     "lambda_cm2": 25.0,
+     "A": [
+      [
+       0.9637274146460522,
+       0.03378628247768238
+      ],
+      [
+       -0.051914310639272175,
+       1.11083654194937
+      ]
+     ],
+     "b_cm": [
+      -0.9228813521335244,
+      -2.8025852085720184
+     ],
+     "W_poly": null,
+     "fit_ms": 0.12016698019579053
+    },
+    "5": {
+     "kind": "affine",
+     "lambda_cm2": 25.0,
+     "A": [
+      [
+       0.978654069162836,
+       0.03799305418632699
+      ],
+      [
+       0.002662767745057214,
+       0.9955100488560473
+      ]
+     ],
+     "b_cm": [
+      -0.6520522343372664,
+      -1.823972795026508
+     ],
+     "W_poly": null,
+     "fit_ms": 0.07995901978574693
+    },
+    "9": {
+     "kind": "affine",
+     "lambda_cm2": 25.0,
+     "A": [
+      [
+       0.9544326577231529,
+       0.10492042923394315
+      ],
+      [
+       0.07357246111648413,
+       1.009156706551627
+      ]
+     ],
+     "b_cm": [
+      -0.7445554166625863,
+      -1.6052550288252916
+     ],
+     "W_poly": null,
+     "fit_ms": 0.07491701398976147
+    }
+   },
+   "tgaze_appearance_9pt": {
+    "fit_ms_including_tgaze_LOO": 44530.50491702743,
+    "n_frames": 432
+   }
+  },
+  "corrections": {
+   "primary:0": {
+    "kind": "none",
+    "lambda_cm2": 0.0,
+    "A": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ],
+    "b_cm": [
+     0.0,
+     0.0
+    ],
+    "W_poly": null
+   },
+   "primary:1": {
+    "kind": "bias",
+    "lambda_cm2": 0.0,
+    "A": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ],
+    "b_cm": [
+     0.6155848256871104,
+     -1.3139643550850448
+    ],
+    "W_poly": null
+   },
+   "primary:3": {
+    "kind": "affine",
+    "lambda_cm2": 25.0,
+    "A": [
+     [
+      0.9637274146460522,
+      0.03378628247768238
+     ],
+     [
+      -0.051914310639272175,
+      1.11083654194937
+     ]
+    ],
+    "b_cm": [
+     -0.9228813521335244,
+     -2.8025852085720184
+    ],
+    "W_poly": null
+   },
+   "primary:5": {
+    "kind": "affine",
+    "lambda_cm2": 25.0,
+    "A": [
+     [
+      0.978654069162836,
+      0.03799305418632699
+     ],
+     [
+      0.002662767745057214,
+      0.9955100488560473
+     ]
+    ],
+    "b_cm": [
+     -0.6520522343372664,
+     -1.823972795026508
+    ],
+    "W_poly": null
+   },
+   "primary:9": {
+    "kind": "affine",
+    "lambda_cm2": 25.0,
+    "A": [
+     [
+      0.9544326577231529,
+      0.10492042923394315
+     ],
+     [
+      0.07357246111648413,
+      1.009156706551627
+     ]
+    ],
+    "b_cm": [
+     -0.7445554166625863,
+     -1.6052550288252916
+    ],
+    "W_poly": null
+   }
+  },
+  "latency_ms": {
+   "mediapipe": {
+    "mean": 5.803495539213246,
+    "median": 5.764000496128574,
+    "p95": 6.152274990745354
+   },
+   "features": {
+    "mean": 0.5533973394065268,
+    "median": 0.5549795023398474,
+    "p95": 0.6323538371361792
+   },
+   "onnx": {
+    "mean": 0.06391806275739025,
+    "median": 0.06252099410630763,
+    "p95": 0.07987914723344147
+   },
+   "eye_patch": {
+    "mean": 1.2679225218178343,
+    "median": 1.2462705053621903,
+    "p95": 1.427395835344214
+   },
+   "total_m8_only": {
+    "mean": 6.890547003745774,
+    "median": 6.843874987680465,
+    "p95": 7.323444096255116
+   },
+   "total": {
+    "mean": 8.158469525563609,
+    "median": 8.110687500447966,
+    "p95": 8.623506549338344
+   }
+  },
+  "camera_fps_median": 30.008250178233485,
+  "processed_fps_in_trials_median": 30.117210179299637,
+  "cpu_percent_one_core_median": 101.75,
+  "rss_mb_max": 599.9375,
+  "n_logical_cpu": 10,
+  "benchmarks": [
+   {
+    "time": "2026-10-12T00:21:40",
+    "frames_processed": 300,
+    "frames_with_face": 300,
+    "camera_fps": 30.023194999893153,
+    "effective_fps": 29.96124512940681,
+    "latency_ms": {
+     "mediapipe": {
+      "mean": 7.308983460146313,
+      "median": 7.351416992605664,
+      "p95": 8.149704201787245
+     },
+     "features": {
+      "mean": 0.6382234614769308,
+      "median": 0.6418539996957406,
+      "p95": 0.7205833651823923
+     },
+     "onnx": {
+      "mean": 0.07391031501659502,
+      "median": 0.07093700696714222,
+      "p95": 0.09602739883121106
+     },
+     "total_m8_only": {
+      "mean": 8.609746002184693,
+      "median": 8.70299999951385,
+      "p95": 9.57014854211593
+     },
+     "eye_patch": {
+      "mean": 0.0001171808495807151,
+      "median": 0.00012500095181167126,
+      "p95": 0.000166997779160738
+     },
+     "total": {
+      "mean": 8.609863183034273,
+      "median": 8.703145504114218,
+      "p95": 9.570273543067742
+     }
+    },
+    "cpu_percent_of_one_core": 62.72226331236692,
+    "n_logical_cpu": 10,
+    "rss_mb": 530.6875,
+    "ort_session_providers": [
+     "CPUExecutionProvider"
+    ],
+    "ort_available_providers": [
+     "CoreMLExecutionProvider",
+     "AzureExecutionProvider",
+     "CPUExecutionProvider"
+    ],
+    "mediapipe_delegate": "CPU",
+    "torch_loaded": false,
+    "fake_camera": false
+   }
+  ],
+  "runtime": {
+   "onnx_path": "/Users/ryotaro_s/tgaze/experiments/phase6_kit/model/final_cpu_model.onnx",
+   "ort_session_providers": [
+    "CPUExecutionProvider"
+   ],
+   "ort_available_providers": [
+    "CoreMLExecutionProvider",
+    "AzureExecutionProvider",
+    "CPUExecutionProvider"
+   ],
+   "mediapipe_delegate": "CPU",
+   "mediapipe_running_mode": "VIDEO",
+   "mirrored": true,
+   "rich16d_set_camera_matrix": "set_camera_matrix(K_raw, (1920,1080), mirrored=True)",
+   "K_raw": [
+    [
+     1442.5767993783895,
+     0.0,
+     977.7219400868782
+    ],
+    [
+     0.0,
+     1437.330171545603,
+     516.4733520932359
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "K_mirrored": [
+    [
+     1442.5767993783895,
+     0.0,
+     942.2780599131218
+    ],
+    [
+     0.0,
+     1437.330171545603,
+     516.4733520932359
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "K_matches_training": true,
+   "K_max_abs_diff_vs_training_px": 0.0,
+   "torch_loaded": false
+  },
+  "camera": {
+   "size": [
+    1920,
+    1080
+   ],
+   "reported_fps_property": 15.0,
+   "backend": "AVFOUNDATION",
+   "center_stage_disabled": true
+  },
+  "camera_matrix": {
+   "path": "/Users/ryotaro_s/tgaze/results/camera_calib/1920x1080_mac/camera_matrix.json",
+   "host_in_json": "taruyaryoutarounoMacBook-Air",
+   "image_size": [
+    1920,
+    1080
+   ],
+   "K": [
+    [
+     1442.5767993783895,
+     0.0,
+     977.7219400868782
+    ],
+    [
+     0.0,
+     1437.330171545603,
+     516.4733520932359
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "dist_k1_k2_p1_p2_k3": [
+    -0.031153903362728073,
+    0.048274455977853896,
+    -0.00267994446415936,
+    0.0030347878674039765,
+    -0.0615659522216111
+   ],
+   "this_machine": "taruyaryoutarounoMacBook-Air",
+   "host_match": true
+  },
+  "sanity": {
+   "time": "2026-10-12T00:14:20",
+   "median_pred_uv": {
+    "left": [
+     -0.9142036437988281,
+     0.5175878256559372
+    ],
+    "right": [
+     0.761411651968956,
+     0.2906668670475483
+    ],
+    "up": [
+     -0.18806544691324234,
+     1.1299187541007996
+    ],
+    "down": [
+     0.02920101210474968,
+     -0.5591496378183365
+    ]
+   },
+   "dx_right_minus_left_cm": 24.346690247505904,
+   "dy_up_minus_down_cm": 15.961696303635835,
+   "x_direction_ok": true,
+   "y_direction_ok": true,
+   "pass": true
+  },
+  "geometry_check": {
+   "confirmed": true,
+   "time": "2026-10-12T00:13:44",
+   "layout": {
+    "screen_pt": [
+     1470,
+     956
+    ],
+    "window_pt": [
+     0,
+     32,
+     1470,
+     924
+    ],
+    "canvas_px": [
+     1470,
+     924
+    ],
+    "display_mm": [
+     290.6,
+     189.0
+    ],
+    "mm_per_pt": [
+     0.19768707482993197,
+     0.19769874476987448
+    ]
+   }
+  },
+  "frozen_protocol_hash": "e400ea869503b60c",
+  "model_onnx_sha256": "db19af0b9521dc2e83d66cfbc324acf62905fbfe6ca820ab7ea286a9dac1c25e",
+  "platform": {
+   "system": "Darwin",
+   "machine": "arm64",
+   "mac_ver": "26.5.2",
+   "python": "3.12.15",
+   "processor": "arm"
+  }
+ }
+]

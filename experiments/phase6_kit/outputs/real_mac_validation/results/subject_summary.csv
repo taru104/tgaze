@@ -1,0 +1,6 @@
+subject_id,calibration,n,mean_cm,median_cm,rmse_cm,p50_cm,p90_cm,p95_cm,status_counts
+subject_00,0-point,75,3.22394,2.76844,3.76202,2.76844,5.70835,6.47255,"{""calibration"": {""VALID"": 18}, ""evaluation"": {""RETAKE_RECOMMENDED"": 9, ""VALID"": 66, ""INVALID"": 1}}"
+subject_00,1-point,75,3.83375,3.34271,4.45772,3.34271,6.57966,7.69785,"{""calibration"": {""VALID"": 18}, ""evaluation"": {""RETAKE_RECOMMENDED"": 9, ""VALID"": 66, ""INVALID"": 1}}"
+subject_00,3-point,75,4.62738,4.27555,5.30037,4.27555,7.72727,8.98535,"{""calibration"": {""VALID"": 18}, ""evaluation"": {""RETAKE_RECOMMENDED"": 9, ""VALID"": 66, ""INVALID"": 1}}"
+subject_00,5-point,75,3.74257,3.39976,4.33483,3.39976,6.41908,7.75329,"{""calibration"": {""VALID"": 18}, ""evaluation"": {""RETAKE_RECOMMENDED"": 9, ""VALID"": 66, ""INVALID"": 1}}"
+subject_00,9-point,75,3.55053,3.28962,4.11639,3.28962,5.80235,7.3622,"{""calibration"": {""VALID"": 18}, ""evaluation"": {""RETAKE_RECOMMENDED"": 9, ""VALID"": 66, ""INVALID"": 1}}"
