@@ -1,0 +1,12 @@
+# Phase 6 real-Mac validation kit (CPU only). Separate venv; tgaze's own venv is not modified.
+numpy
+opencv-python
+mediapipe
+onnxruntime          # CPU build; the app passes providers=["CPUExecutionProvider"] only
+scikit-learn         # current-tgaze baseline (Huber / PCA) and nothing else
+psutil
+matplotlib
+pillow
+pyobjc-framework-AVFoundation   # Center Stage off (tgaze macos.py)
+pyobjc-framework-Quartz
+pyobjc-framework-Cocoa          # screen size / notch inset

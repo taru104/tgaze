@@ -1,0 +1,104 @@
+{
+  "_comment": "Phase 6 real-Mac validation. Everything under timing/grids/calibration/evaluation/quality/analysis is FROZEN after the pilot: main subjects record its hash and analyze.py refuses mixed hashes.",
+  "paths": {
+    "tgaze_dir": "~/tgaze",
+    "camera_matrix_json": "results/camera_calib/1920x1080_mac/camera_matrix.json",
+    "face_landmarker_task": "face_landmarker.task",
+    "model_dir": "model",
+    "output_dir": "outputs/real_mac_validation"
+  },
+  "camera": {
+    "index": 0,
+    "width": 1920,
+    "height": 1080,
+    "require_k_host_match": true,
+    "mediapipe_running_mode": "VIDEO",
+    "mediapipe_min_confidence": 0.5,
+    "ort_intra_op_threads": 0
+  },
+  "timing": {
+    "move_ms": 500,
+    "settle_ms": 700,
+    "record_ms": 800,
+    "inter_trial_blank_ms": 150,
+    "keep_settle_frames": true
+  },
+  "target": {
+    "outer_radius_mm": 6.0,
+    "ring_width_mm": 0.9,
+    "center_dot_radius_mm": 1.2,
+    "shrink_from_mm": 10.0,
+    "background_gray": 40,
+    "color_bgr": [255, 255, 255],
+    "dot_color_bgr": [0, 0, 255]
+  },
+  "grids": {
+    "evaluation_uv": [-0.8, -0.4, 0.0, 0.4, 0.8],
+    "calibration_uv": [-0.7, 0.0, 0.7],
+    "sanity_targets": {"left": [-0.8, 0.0], "right": [0.8, 0.0], "up": [0.0, 0.8], "down": [0.0, -0.8]},
+    "sanity_repeats": 2,
+    "geometry_check_marks_uv": [[-0.8, 0.8], [0.8, 0.8], [-0.8, -0.8], [0.8, -0.8], [0.0, 0.0]]
+  },
+  "calibration": {
+    "repeats_per_point": 2,
+    "pose_instruction": "NATURAL",
+    "_point_sets_comment": "3-point set is a triangle (upper-left, upper-right, bottom-centre), not centre/UL/LR: those three are collinear (v = -u), which leaves an affine correction undetermined across the other diagonal.",
+    "point_sets": {
+      "1": [[0.0, 0.0]],
+      "3": [[-0.7, 0.7], [0.7, 0.7], [0.0, -0.7]],
+      "5": [[0.0, 0.0], [-0.7, 0.7], [0.7, 0.7], [-0.7, -0.7], [0.7, -0.7]],
+      "9": [[-0.7, 0.7], [0.0, 0.7], [0.7, 0.7], [-0.7, 0.0], [0.0, 0.0], [0.7, 0.0], [-0.7, -0.7], [0.0, -0.7], [0.7, -0.7]]
+    },
+    "models": {
+      "0": {"primary": {"kind": "none"}},
+      "1": {"primary": {"kind": "bias"}},
+      "3": {"primary": {"kind": "affine", "lambda_cm2": 25.0}, "secondary_bias_scale": {"kind": "bias_scale", "lambda_cm2": 25.0}, "secondary_bias": {"kind": "bias"}},
+      "5": {"primary": {"kind": "affine", "lambda_cm2": 25.0}, "secondary_bias_scale": {"kind": "bias_scale", "lambda_cm2": 25.0}, "secondary_bias": {"kind": "bias"}},
+      "9": {"primary": {"kind": "affine", "lambda_cm2": 25.0}, "secondary_bias_scale": {"kind": "bias_scale", "lambda_cm2": 25.0}, "secondary_bias": {"kind": "bias"}, "secondary_poly2": {"kind": "poly2", "lambda_cm2": 25.0}}
+    }
+  },
+  "evaluation": {
+    "blocks": [
+      ["NATURAL", "EYE_DOMINANT", "HEAD_ALLOWED", "NATURAL"],
+      ["NATURAL", "HEAD_ALLOWED", "EYE_DOMINANT", "NATURAL"]
+    ],
+    "_blocks_comment": "odd subject numbers use blocks[0], even use blocks[1] (counterbalanced E/H order). Each block = all 25 targets once in random order. NATURAL is repeated (first/last block) to measure the test-retest noise floor of the pose-invariance metric.",
+    "pilot_blocks": [["NATURAL", "EYE_DOMINANT", "HEAD_ALLOWED"]],
+    "pilot_targets_subsample": null,
+    "retake_invalid_automatically": true,
+    "max_retakes_per_trial": 2
+  },
+  "instructions": {
+    "NATURAL": ["いつも通り自然に、ターゲットの中心(赤い点)を見てください。", "Look at the red centre dot naturally, as you usually would."],
+    "EYE_DOMINANT": ["頭はなるべく正面のまま、主に目を動かして中心を見てください。", "Keep your head facing the screen and look mainly with your eyes."],
+    "HEAD_ALLOWED": ["目だけでなく、頭も自然に少し動かして中心を見てください。", "Feel free to move your head a little, naturally, while looking."]
+  },
+  "quality": {
+    "min_record_frames": 8,
+    "face_loss_retake_fraction": 0.1,
+    "face_loss_invalid_fraction": 0.34,
+    "head_motion_retake_deg": 4.0,
+    "head_motion_invalid_deg": 10.0,
+    "pred_jump_retake_cm": 4.0,
+    "pred_spread_retake_cm": 2.5
+  },
+  "analysis": {
+    "trial_statistic": "median",
+    "use_status": ["VALID", "RETAKE_RECOMMENDED"],
+    "head_pose_bins_deg": [5.0, 10.0],
+    "assumed_ipd_m": 0.063,
+    "ema_alpha": 0.3,
+    "median_window": 5,
+    "synthetic_reference": {
+      "M8_identity_cv_mean_cm": 1.90, "M8_identity_cv_std_cm": 0.29, "M8_identity_cv_p95_cm": 4.00,
+      "B2_identity_cv_mean_cm": 1.96, "B2_identity_cv_std_cm": 0.27, "B2_identity_cv_p95_cm": 4.62,
+      "M8_pose_invariance_cm": 2.77, "M8_pose_invariance_definition": "max pairwise distance among 4 strategies for the same target (Phase 5)"
+    }
+  },
+  "storage": {
+    "save_representative_frame": true,
+    "save_all_record_frames": false,
+    "jpeg_quality": 90,
+    "save_eye_patch": true
+  }
+}
