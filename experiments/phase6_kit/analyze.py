@@ -60,6 +60,19 @@ def frame_uv(t, key="uv_m8_raw"):
     return t["z"][key][t["rec_idx"]].astype(np.float64)
 
 
+def kabsch_pyr_deg(t):
+    """Median head pitch/yaw/roll [deg] of the record frames from M8's own Kabsch R_head (40 rigid points, frozen
+    template), R = Rx(pitch) Ry(yaw) Rz(roll). rich16d's 6-point solvePnP angles (head_*_deg) are about 2.7x
+    amplified in yaw with a per-person offset (synthetic and real), so these columns are the ones to read for head pose."""
+    R = t["z"]["R_head"][t["rec_idx"]].astype(np.float64)
+    R = R[np.isfinite(R).all(axis=(1, 2))]
+    if not len(R):
+        return np.full(3, np.nan)
+    R = np.asarray(R)
+    ang = np.stack([np.arctan2(-R[:, 1, 2], R[:, 2, 2]), np.arcsin(np.clip(R[:, 0, 2], -1, 1)), np.arctan2(-R[:, 0, 1], R[:, 0, 0])], 1)
+    return np.median(np.degrees(ang), 0)
+
+
 def trial_pred(uv):
     return np.median(uv, 0)
 
@@ -156,6 +169,7 @@ def analyze_subject(sid, sdir, cfg, geo, secondary, runtime=None):
     cal_pairs = [(tuple(t["target"]), tuple(trial_pred(frame_uv(t)))) for t in cal]
     # head pose reference = this subject's calibration session (natural sitting posture)
     ref_py = np.median(np.vstack([np.degrees(t["z"]["f16"][t["rec_idx"]][:, [4, 5]]) for t in cal]), 0) if cal else np.zeros(2)
+    ref_kpy = np.nanmedian(np.vstack([kabsch_pyr_deg(t)[None, :2] for t in cal]), 0) if cal else np.zeros(2)
 
     corr, fit_ms = {}, {}
     for n in CAL_LEVELS:
@@ -188,10 +202,13 @@ def analyze_subject(sid, sdir, cfg, geo, secondary, runtime=None):
         eye = np.median(t["z"]["eye_cam_m"][t["rec_idx"]], 0)
         py = np.median(np.degrees(t["z"]["f16"][t["rec_idx"]][:, [4, 5, 7]]), 0)
         dpose = float(np.hypot(*(py[:2] - ref_py)))
+        kpy = kabsch_pyr_deg(t)
         r = {"subject_id": sid, "trial_id": t["rec"]["trial_id"], "slot": t["slot"], "block": t["block"], "pose_instruction": t["cond"],
              "status": t["status"], "target_u": t["target"][0], "target_v": t["target"][1], "region": str(C.screen_region(t["target"])),
              "n_record_frames": len(t["rec_idx"]), "head_pitch_deg": py[0], "head_yaw_deg": py[1], "head_roll_deg": py[2],
              "head_delta_from_cal_deg": dpose, "eye_z_cm": eye[2] * 100,
+             "kabsch_head_pitch_deg": kpy[0], "kabsch_head_yaw_deg": kpy[1], "kabsch_head_roll_deg": kpy[2],
+             "kabsch_head_delta_from_cal_deg": float(np.hypot(*(kpy[:2] - ref_kpy))),
              "pred_live_u": t["rec"]["m8_raw_pred_uv_median"][0], "pred_live_v": t["rec"]["m8_raw_pred_uv_median"][1]}
         for (v, n), c in corr.items():
             p = c.apply(raw)
@@ -321,6 +338,9 @@ def pose_invariance(rows, levels):
             rec["head_yaw_diff_deg"] = abs(h["head_yaw_deg"] - e["head_yaw_deg"])
             rec["head_pitch_diff_deg"] = abs(h["head_pitch_deg"] - e["head_pitch_deg"])
             rec["head_pose_diff_deg"] = float(np.hypot(rec["head_yaw_diff_deg"], rec["head_pitch_diff_deg"]))
+            rec["kabsch_head_yaw_diff_deg"] = abs(h["kabsch_head_yaw_deg"] - e["kabsch_head_yaw_deg"])
+            rec["kabsch_head_pitch_diff_deg"] = abs(h["kabsch_head_pitch_deg"] - e["kabsch_head_pitch_deg"])
+            rec["kabsch_head_pose_diff_deg"] = float(np.hypot(rec["kabsch_head_yaw_diff_deg"], rec["kabsch_head_pitch_diff_deg"]))
         out.append(rec)
     return out
 
@@ -673,7 +693,8 @@ def main():
 
     write_csv(os.path.join(rdir, "trials.csv"), rows)
     write_csv(os.path.join(rdir, "zero_shot.csv"), [{k: r[k] for k in ("subject_id", "trial_id", "block", "pose_instruction", "status", "target_u", "target_v", "region",
-                                                                        "C0_u", "C0_v", "C0_err_cm", "C0_err_deg", "head_pitch_deg", "head_yaw_deg", "head_delta_from_cal_deg")} for r in rows])
+                                                                        "C0_u", "C0_v", "C0_err_cm", "C0_err_deg", "head_pitch_deg", "head_yaw_deg", "head_delta_from_cal_deg",
+                                                                        "kabsch_head_pitch_deg", "kabsch_head_yaw_deg", "kabsch_head_delta_from_cal_deg")} for r in rows])
     write_csv(os.path.join(rdir, "calibration_comparison.csv"), [{"calibration": f"{n}-point", **calcomp[f"C{n}"]["pooled"],
                                                                    "subject_mean_cm": calcomp[f"C{n}"]["subject_mean_cm_mean_std"][0],
                                                                    "subject_std_cm": calcomp[f"C{n}"]["subject_mean_cm_mean_std"][1]} for n in CAL_LEVELS]

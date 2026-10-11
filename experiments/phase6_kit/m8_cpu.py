@@ -24,6 +24,38 @@ R16_EYE = [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15]
 L_IRIS, R_IRIS = list(range(468, 473)), list(range(473, 478))
 
 
+def kabsch_euler(R):
+    """(N,3,3) camera<-head Kabsch rotation -> (N,3) [pitch, yaw, roll] radians, R = Rx(pitch) Ry(yaw) Rz(roll).
+    Same sign convention as rich16d (cv2.RQDecomp3x3) for near-frontal heads; within 0.3 deg of it in yaw."""
+    R = np.asarray(R, np.float64)
+    yaw = np.arcsin(np.clip(R[:, 0, 2], -1, 1))
+    pitch = np.arctan2(-R[:, 1, 2], R[:, 2, 2])
+    roll = np.arctan2(-R[:, 0, 1], R[:, 0, 0])
+    return np.stack([pitch, yaw, roll], 1)
+
+
+def build_inputs(lms, f16, K_mir, w, h, template, head_angles="rich16d"):
+    """lms (N,478,3) mirrored-frame MediaPipe coords, f16 (N,16) rich16d -> (ONNX feature dict, fe).
+
+    head_pose = Kabsch R_head 2 columns (6) + rigid centroid xy (2) + log s (1) + 3 angles:
+      rich16d : tgaze 6-point solvePnP pitch/yaw/roll (frozen Phase 5 M8, 12D)
+      none    : no angles (9D)
+      kabsch  : Euler angles of R_head (12D)"""
+    f16 = np.asarray(f16, np.float64)
+    fe = lf.features(lf.to_ncam(lms, K_mir, w, h), template, f16[:, [4, 5, 7]])
+    head9 = fe["head"][:, :9]
+    if head_angles == "rich16d":
+        head = np.hstack([head9, fe["head"][:, -3:]])
+    elif head_angles == "none":
+        head = head9
+    elif head_angles == "kabsch":
+        head = np.hstack([head9, kabsch_euler(fe["R_head"])])
+    else:
+        raise ValueError(head_angles)
+    feats = {"eye_norm_r16": np.hstack([fe["eye_norm"], f16[:, R16_EYE]]).astype(np.float32), "head_pose": head.astype(np.float32)}
+    return feats, fe
+
+
 def load_camera_matrix(cfg, tgaze, allow_host_mismatch=False):
     """Measured Mac K from tgaze, applied under the same host rule as tgaze main_camK_mac.py."""
     path = os.path.join(tgaze, cfg["paths"]["camera_matrix_json"])
@@ -46,7 +78,7 @@ def load_camera_matrix(cfg, tgaze, allow_host_mismatch=False):
 
 
 class M8Runtime:
-    def __init__(self, cfg, tgaze, K_raw, video_mode=None, dist=None):
+    def __init__(self, cfg, tgaze, K_raw, video_mode=None, dist=None, model_dir=None):
         assert "torch" not in sys.modules, "torch must not be loaded in the CPU runtime"
         import cv2
         import mediapipe as mp
@@ -54,8 +86,9 @@ class M8Runtime:
         import rich16d
         from appearance import eye_patch
         self.cv2, self.mp, self.rich16d, self.eye_patch = cv2, mp, rich16d, eye_patch
-        mdir = os.path.join(KIT_DIR, cfg["paths"]["model_dir"])
+        mdir = os.path.join(KIT_DIR, model_dir or cfg["paths"]["model_dir"])
         self.prep = json.load(open(os.path.join(mdir, "final_model_preprocessing.json")))
+        self.head_angles = self.prep.get("head_angles", "rich16d")      # frozen Phase 5 M8 file has no key -> rich16d
         self.onnx_path = os.path.join(mdir, "final_cpu_model.onnx")
         self.w, self.h = cfg["camera"]["width"], cfg["camera"]["height"]
         assert [self.w, self.h] == self.prep["image_size"], (self.prep["image_size"], self.w, self.h)
@@ -119,9 +152,7 @@ class M8Runtime:
         if f16 is None:
             return None
         f16 = np.asarray(f16, np.float64)[None]
-        fe = lf.features(lf.to_ncam(lms[None], K_mir, self.w, self.h), self.template, f16[:, [4, 5, 7]])
-        feats = {"eye_norm_r16": np.hstack([fe["eye_norm"], f16[:, R16_EYE]]).astype(np.float32),
-                 "head_pose": np.hstack([fe["head"][:, :9], fe["head"][:, -3:]]).astype(np.float32)}
+        feats, fe = build_inputs(lms[None], f16, K_mir, self.w, self.h, self.template, self.head_angles)
         return {"inputs": {b: feats[b] for b in self.prep["branches"]}, "f16": f16[0].astype(np.float32), "R_head": fe["R_head"][0]}
 
     def infer(self, inputs):
@@ -173,6 +204,54 @@ class M8Runtime:
 
     def close(self):
         self.lm.close()
+
+
+class OfflineM8:
+    """Re-inference from saved landmarks (no camera, no MediaPipe): any model directory with
+    final_cpu_model.onnx + final_model_preprocessing.json (frozen M8 or an alternative in models_alt/).
+
+        m = OfflineM8("models_alt/m8_no_rich16d_angles", K_raw, tgaze_dir)   # K_raw: subject.json camera_matrix.K
+        uv, ok = m.predict_lms(z["lms"])                                    # z = np.load(trial npz); uv (N,2) display uv
+    """
+
+    def __init__(self, model_dir, K_raw, tgaze, w=1920, h=1080, threads=0):
+        assert "torch" not in sys.modules, "torch must not be loaded in the CPU runtime"
+        if tgaze not in sys.path:
+            sys.path.insert(0, tgaze)
+        import onnxruntime as ort
+        import rich16d
+        mdir = model_dir if os.path.isabs(model_dir) else os.path.join(KIT_DIR, model_dir)
+        self.prep = json.load(open(os.path.join(mdir, "final_model_preprocessing.json")))
+        self.onnx_path = os.path.join(mdir, "final_cpu_model.onnx")
+        self.head_angles = self.prep.get("head_angles", "rich16d")
+        self.w, self.h = w, h
+        self.K_raw = np.array(K_raw, np.float64)
+        self.K_mir = lf.mirrored_K(self.K_raw, w)
+        self.template = np.array(self.prep["template_rigid"])
+        self.rich16d = rich16d
+        rich16d.set_camera_matrix(self.K_raw, (w, h), mirrored=True)
+        so = ort.SessionOptions()
+        if threads:
+            so.intra_op_num_threads = int(threads)
+        self.sess = ort.InferenceSession(self.onnx_path, so, providers=["CPUExecutionProvider"])
+        assert self.sess.get_providers() == ["CPUExecutionProvider"]
+
+    def predict_lms(self, lms):
+        """lms (N,478,3) (frames without a face may be NaN) -> uv (N,2) with NaN where no prediction, ok (N,)."""
+        lms = np.asarray(lms, np.float64)
+        uv = np.full((len(lms), 2), np.nan)
+        ok = np.zeros(len(lms), bool)
+        f16 = np.zeros((len(lms), 16))
+        for i, l in enumerate(lms):
+            if not np.isfinite(l).all():
+                continue
+            f = self.rich16d.rich_16d_from_lms(l, self.w, self.h)
+            if f is not None:
+                f16[i], ok[i] = f, True
+        if ok.any():
+            feats, _ = build_inputs(lms[ok], f16[ok], self.K_mir, self.w, self.h, self.template, self.head_angles)
+            uv[ok] = self.sess.run(["y"], {b: feats[b] for b in self.prep["branches"]})[0][:, :2]
+        return uv, ok
 
 
 def undistort_lms(lms, K_raw, dist, w, h):

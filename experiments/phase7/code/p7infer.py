@@ -39,7 +39,8 @@ class Runner:
         self.device = device
 
     def inputs(self, lms, f16, K_mir=None, patch=None):
-        X, geo, _ = D.fold_features(self.base, None, K_mir=K_mir, lms=lms, f16=f16, template=self.template)
+        X, geo, _ = D.fold_features(self.base, None, K_mir=K_mir, lms=lms, f16=f16, template=self.template,
+                                    head_angles=self.cfg.get("head_angles", "rich16d"))
         if self.ck.get("pca") is not None:
             pc = self.ck["pca"]
             X["eye_norm_r16"] = np.hstack([X["eye_norm_r16"], ((patch - pc["mean"]) @ pc["components"].T).astype(np.float32)])

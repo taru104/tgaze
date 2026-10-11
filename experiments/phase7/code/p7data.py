@@ -185,7 +185,32 @@ def rot_from_6d(r6):
     return np.stack([a, b, np.cross(a, b)], -1)
 
 
-def fold_features(base, tr, K_mir=None, lms=None, f16=None, template=None):
+def kabsch_euler(R):
+    """(N,3,3) camera<-head Kabsch rotation -> (N,3) [pitch, yaw, roll] radians, R = Rx(pitch) Ry(yaw) Rz(roll).
+    NumPy only (runtime safe). Same sign convention as cv2.RQDecomp3x3 / tgaze rich16d for near-frontal heads."""
+    yaw = np.arcsin(np.clip(R[:, 0, 2], -1, 1))
+    pitch = np.arctan2(-R[:, 1, 2], R[:, 2, 2])
+    roll = np.arctan2(-R[:, 0, 1], R[:, 0, 0])
+    return np.stack([pitch, yaw, roll], 1)
+
+
+HEAD_ANGLES = ("rich16d", "none", "kabsch")
+
+
+def head_pose_input(FE, head_angles="rich16d"):
+    """M8 head_pose branch: R_head 2 columns (6) + rigid centroid xy (2) + log s (1) [+ 3 angles].
+    rich16d = tgaze solvePnP pitch/yaw/roll (Phase 5 frozen M8, 12D); none = 9D; kabsch = Euler of R_head (12D)."""
+    base9 = FE["head"][:, :9]
+    if head_angles == "rich16d":
+        return np.hstack([base9, FE["head"][:, -3:]]).astype(np.float32)
+    if head_angles == "none":
+        return base9.astype(np.float32)
+    if head_angles == "kabsch":
+        return np.hstack([base9, kabsch_euler(FE["R_head"].astype(np.float64))]).astype(np.float32)
+    raise ValueError(head_angles)
+
+
+def fold_features(base, tr, K_mir=None, lms=None, f16=None, template=None, head_angles="rich16d"):
     """Phase 5 features (exact recipe) + M9 geometric inputs. Template from training samples only."""
     g = Geometry(base["geometry"])
     K_mir = g.K_mir if K_mir is None else K_mir
@@ -196,7 +221,7 @@ def fold_features(base, tr, K_mir=None, lms=None, f16=None, template=None):
         template = lf.build_template(NC[tr[:: max(1, len(tr) // 4000)]])
     FE = lf.features(NC, template, F16[:, [4, 5, 7]])
     X = {"eye_norm_r16": np.hstack([FE["eye_norm"], F16[:, R16_EYE]]).astype(np.float32),
-         "head_pose": np.hstack([FE["head"][:, :9], FE["head"][:, -3:]]).astype(np.float32),
+         "head_pose": head_pose_input(FE, head_angles),
          "head": FE["head"], "eye_norm": FE["eye_norm"], "eye_raw": FE["eye_raw"]}
     R = FE["R_head"].astype(np.float64)                       # camera <- template frame (Kabsch)
     rig = NC[:, lf.RIGID]

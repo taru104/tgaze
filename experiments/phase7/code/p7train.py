@@ -63,6 +63,8 @@ def build_args(argv=None):
     ap.add_argument("--eye-pca", type=int, default=0, help="diagnostic: append tgaze eye-patch PCA (fit on train) to the eye branch")
     ap.add_argument("--noise-aug", type=float, default=0.0, help="landmark noise augmentation sigma [px] (M8 only)")
     ap.add_argument("--noise-reps", type=int, default=2, help="noisy replicas of the training set")
+    ap.add_argument("--head-angles", default="rich16d", choices=["rich16d", "none", "kabsch"],
+                    help="last 3 dims of the M8 head_pose input: rich16d solvePnP (Phase 5), none (9D), kabsch Euler")
     ap.add_argument("--save-preds", type=int, default=1)
     ap.add_argument("--tag", default="")
     return ap.parse_args(argv)
@@ -101,7 +103,7 @@ def prepare(args, fold, base):
             chosen.add(g)
             cnt += int((gid[tr] == g).sum())
         tr = tr[np.isin(gid[tr], list(chosen))]
-    X, geo, template = D.fold_features(base, tr)
+    X, geo, template = D.fold_features(base, tr, head_angles=args.head_angles)
     if args.eye_pca:
         from sklearn.decomposition import PCA
         pca = PCA(n_components=args.eye_pca, random_state=0).fit(base["PATCH"][tr])
@@ -374,7 +376,7 @@ def run(args, fold, seed, base, prep_cache):
         for rep in range(args.noise_reps):
             lms_n = (base["LMS"][tr] + rng_n.normal(0, args.noise_aug, size=base["LMS"][tr].shape) / np.array([Wd, Hd, Wd])).astype(np.float32)
             f16_n, _ = PI.rich16d_batch(lms_n, base["geometry"]["K_measured_raw"], Wd, Hd)
-            Xn, _, _ = D.fold_features(base, None, lms=lms_n, f16=f16_n, template=template)
+            Xn, _, _ = D.fold_features(base, None, lms=lms_n, f16=f16_n, template=template, head_angles=args.head_angles)
             for b in stats:
                 X_tr[b] = torch.cat([X_tr[b], T((Xn[b] - stats[b][0]) / stats[b][1])])
             tr_lab = np.concatenate([tr_lab, tr])
