@@ -1,0 +1,56 @@
+{
+  "split": {
+    "train": [
+      2,
+      4,
+      5,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "validation": [
+      3,
+      8
+    ],
+    "test": [
+      0,
+      1,
+      6,
+      7
+    ]
+  },
+  "template_points": 40,
+  "eye_points": 52,
+  "seeds": 1,
+  "aux_weight_validation_cm": {},
+  "aux_weight": 0.3,
+  "optimizer": "AdamW lr 2e-3 wd 1e-4, ReduceLROnPlateau(0.5, 15)",
+  "batch": 512,
+  "max_epochs": 400,
+  "early_stopping_patience": 40,
+  "dropout": 0.1,
+  "branch_mlp": [
+    64,
+    32
+  ],
+  "latent": 16,
+  "fusion_mlp": [
+    64,
+    32
+  ],
+  "screen_loss": "Huber(delta 1 cm) on display cm",
+  "vector_loss": "1000*(1-cos) + 0.1*SmoothL1(origin cm)",
+  "aux_loss": "MSE on standardized head yaw/pitch/roll and eye-in-head yaw/pitch",
+  "training_device": "cuda:0",
+  "gpu": "Quadro RTX 6000",
+  "baselines": "sklearn HuberRegressor(epsilon 1.35, alpha 1e-3), PCA16 on 48x32x2 CLAHE eye patches",
+  "selection": "validation identities: cm + 0.5*pose_invariance + 0.25*(head+eye shortcut cm)"
+}

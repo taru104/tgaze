@@ -1,0 +1,1 @@
+{"train": [0,1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,18,19], "validation": [17], "test": [6], "note": "deployment model for the CPU export; validation id 17 early stopping, test id 6 sanity only. Accuracy estimates come from identity CV."}

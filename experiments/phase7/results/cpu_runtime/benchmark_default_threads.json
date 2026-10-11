@@ -1,0 +1,322 @@
+{
+ "m8": {
+  "onnx_path": "/home/rtarutani/mpfb2-gaze-generator-poc/outputs/experiments/phase7/cpu_runtime/m8/m8.onnx",
+  "onnx_size_bytes": 87098,
+  "onnx_max_abs_diff_vs_torch": 5.960464477539063e-08,
+  "feature_max_abs_diff": 1.2179717701066295e-07,
+  "ort_session_providers": [
+   "CPUExecutionProvider"
+  ],
+  "ort_available_providers": [
+   "AzureExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "torch_imported": false,
+  "CUDA_VISIBLE_DEVICES": "",
+  "this_process_on_gpu": false,
+  "cpu_affinity": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "ort_threads": 0,
+  "latency_ms": {
+   "total": {
+    "mean": 36.8020949854205,
+    "median": 36.35743504855782,
+    "p95": 45.82142250146717
+   },
+   "mediapipe": {
+    "mean": 32.89971435442567,
+    "median": 32.72221807856113,
+    "p95": 42.05626193434
+   },
+   "features": {
+    "mean": 3.655161533970386,
+    "median": 3.350249957293272,
+    "p95": 3.683137276675552
+   },
+   "onnx": {
+    "mean": 0.15945786066974202,
+    "median": 0.15354645438492298,
+    "p95": 0.19689584150910378
+   }
+  },
+  "fps_mean": 27.1723661491597,
+  "fps_p95_frame": 21.823853241744747,
+  "cpu_percent_of_one_core": 221.16720940792527,
+  "rss_mb": 2433.97265625,
+  "frames": 300,
+  "pipeline_error_cm_on_these_frames": 1.3919623127639371,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz"
+ },
+ "m8cons": {
+  "onnx_path": "/home/rtarutani/mpfb2-gaze-generator-poc/outputs/experiments/phase7/cpu_runtime/m8cons/m8cons.onnx",
+  "onnx_size_bytes": 87102,
+  "onnx_max_abs_diff_vs_torch": 5.960464477539063e-08,
+  "feature_max_abs_diff": 1.2179717701066295e-07,
+  "ort_session_providers": [
+   "CPUExecutionProvider"
+  ],
+  "ort_available_providers": [
+   "AzureExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "torch_imported": false,
+  "CUDA_VISIBLE_DEVICES": "",
+  "this_process_on_gpu": false,
+  "cpu_affinity": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "ort_threads": 0,
+  "latency_ms": {
+   "total": {
+    "mean": 36.17634212210154,
+    "median": 36.52701049577445,
+    "p95": 39.32098263176158
+   },
+   "mediapipe": {
+    "mean": 32.346434320012726,
+    "median": 32.87239605560899,
+    "p95": 35.44763175304979
+   },
+   "features": {
+    "mean": 3.5703422439595065,
+    "median": 3.4256165381520987,
+    "p95": 3.795982163865119
+   },
+   "onnx": {
+    "mean": 0.16921726055443287,
+    "median": 0.16561406664550304,
+    "p95": 0.20431280136108398
+   }
+  },
+  "fps_mean": 27.64237458350055,
+  "fps_p95_frame": 25.431714394447724,
+  "cpu_percent_of_one_core": 238.25884094228107,
+  "rss_mb": 2462.7890625,
+  "frames": 300,
+  "pipeline_error_cm_on_these_frames": 1.4175424858983485,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz"
+ },
+ "m9": {
+  "onnx_path": "/home/rtarutani/mpfb2-gaze-generator-poc/outputs/experiments/phase7/cpu_runtime/m9/m9.onnx",
+  "onnx_size_bytes": 55561,
+  "onnx_max_abs_diff_vs_torch": 3.5762786865234375e-07,
+  "feature_max_abs_diff": 1.2179717701066295e-07,
+  "ort_session_providers": [
+   "CPUExecutionProvider"
+  ],
+  "ort_available_providers": [
+   "AzureExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "torch_imported": false,
+  "CUDA_VISIBLE_DEVICES": "",
+  "this_process_on_gpu": false,
+  "cpu_affinity": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "ort_threads": 0,
+  "latency_ms": {
+   "total": {
+    "mean": 35.510613452643156,
+    "median": 35.766954883001745,
+    "p95": 40.30621803831309
+   },
+   "mediapipe": {
+    "mean": 31.17108287134518,
+    "median": 31.481558457016945,
+    "p95": 35.52765616914258
+   },
+   "features": {
+    "mean": 3.9709192467853427,
+    "median": 3.791696159169078,
+    "p95": 4.187281976919621
+   },
+   "onnx": {
+    "mean": 0.27191949853052694,
+    "median": 0.2683751517906785,
+    "p95": 0.3184388857334852
+   }
+  },
+  "fps_mean": 28.160594897455006,
+  "fps_p95_frame": 24.81006774313208,
+  "cpu_percent_of_one_core": 233.33613689249117,
+  "rss_mb": 2483.52734375,
+  "frames": 300,
+  "pipeline_error_cm_on_these_frames": 1.5927414155606539,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz"
+ },
+ "m9cons": {
+  "onnx_path": "/home/rtarutani/mpfb2-gaze-generator-poc/outputs/experiments/phase7/cpu_runtime/m9cons/m9cons.onnx",
+  "onnx_size_bytes": 55565,
+  "onnx_max_abs_diff_vs_torch": 2.3096799850463867e-07,
+  "feature_max_abs_diff": 1.2179717701066295e-07,
+  "ort_session_providers": [
+   "CPUExecutionProvider"
+  ],
+  "ort_available_providers": [
+   "AzureExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "torch_imported": false,
+  "CUDA_VISIBLE_DEVICES": "",
+  "this_process_on_gpu": false,
+  "cpu_affinity": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "ort_threads": 0,
+  "latency_ms": {
+   "total": {
+    "mean": 35.57309029313425,
+    "median": 36.10671008937061,
+    "p95": 38.496766751632094
+   },
+   "mediapipe": {
+    "mean": 31.356475832872093,
+    "median": 32.10459556430578,
+    "p95": 34.200504852924496
+   },
+   "features": {
+    "mean": 3.8705843966454268,
+    "median": 3.75293695833534,
+    "p95": 4.119119374081492
+   },
+   "onnx": {
+    "mean": 0.252916079480201,
+    "median": 0.25231402833014727,
+    "p95": 0.29489160515367985
+   }
+  },
+  "fps_mean": 28.111136585538762,
+  "fps_p95_frame": 25.976207468322112,
+  "cpu_percent_of_one_core": 232.6480022914533,
+  "rss_mb": 2492.39453125,
+  "frames": 300,
+  "pipeline_error_cm_on_these_frames": 1.8219338914743495,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz"
+ },
+ "m8eyepca": {
+  "onnx_path": "/home/rtarutani/mpfb2-gaze-generator-poc/outputs/experiments/phase7/cpu_runtime/m8eyepca/m8eyepca.onnx",
+  "onnx_size_bytes": 91328,
+  "onnx_max_abs_diff_vs_torch": 5.960464477539063e-08,
+  "feature_max_abs_diff": 7.319600610067312e-07,
+  "ort_session_providers": [
+   "CPUExecutionProvider"
+  ],
+  "ort_available_providers": [
+   "AzureExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "torch_imported": false,
+  "CUDA_VISIBLE_DEVICES": "",
+  "this_process_on_gpu": false,
+  "cpu_affinity": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "ort_threads": 0,
+  "latency_ms": {
+   "total": {
+    "mean": 37.05075670809796,
+    "median": 38.098679040558636,
+    "p95": 39.92102933116257
+   },
+   "mediapipe": {
+    "mean": 29.943954940730084,
+    "median": 30.986824072897434,
+    "p95": 32.421285076998174
+   },
+   "features": {
+    "mean": 6.823854384322961,
+    "median": 6.799801019951701,
+    "p95": 7.295574713498354
+   },
+   "onnx": {
+    "mean": 0.18823287604997554,
+    "median": 0.19004347268491983,
+    "p95": 0.21967749344184997
+   }
+  },
+  "fps_mean": 26.99000206334345,
+  "fps_p95_frame": 25.049454304010006,
+  "cpu_percent_of_one_core": 440.6222227615642,
+  "rss_mb": 2511.0078125,
+  "frames": 300,
+  "pipeline_error_cm_on_these_frames": 0.95044544189948,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz"
+ }
+}
