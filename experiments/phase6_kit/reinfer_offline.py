@@ -7,7 +7,8 @@ and its offline prediction is checked against the live one (uv_m8_raw).
   python reinfer_offline.py outputs/real_mac_validation                       # frozen + every models_alt/* model
   python reinfer_offline.py outputs/real_mac_validation --models models_alt/m8_no_rich16d_angles --subjects subject_00
 
-Writes <root>/reinfer/trials.csv (one row per evaluation trial and model) and <root>/reinfer/summary.md / summary.json
+Writes <root>/reinfer/trials.csv (one row per evaluation trial and model), cal_trials.csv (calibration-trial medians per model,
+input of cal_variants.py) and <root>/reinfer/summary.md / summary.json
 (mean error per pose instruction x calibration points 0/1/3/5/9, primary correction of config.json, the same
 calibration pairs as analyze.py). Nothing under <root>/subject_* is modified.
 """
@@ -56,7 +57,7 @@ def main():
     sdirs = sorted(d for d in glob.glob(os.path.join(a.root, "subject_*")) if os.path.isdir(d))
     if a.subjects:
         sdirs = [d for d in sdirs if os.path.basename(d) in a.subjects]
-    rows, summary = [], {"models": {}, "subjects": [os.path.basename(d) for d in sdirs], "config_frozen_hash": C.frozen_config_hash(cfg)}
+    rows, cal_rows, summary = [], [], {"models": {}, "subjects": [os.path.basename(d) for d in sdirs], "config_frozen_hash": C.frozen_config_hash(cfg)}
     for sdir in sdirs:
         sid = os.path.basename(sdir)
         info, _, trials, _ = load_subject(sdir, cfg)
@@ -73,6 +74,8 @@ def main():
             live_diff = max(float(np.nanmax(np.abs(pred[id(t)][0] - t["z"]["uv_m8_raw"][t["rec_idx"]][pred[id(t)][1]])))
                             for t in ev[:10]) if mdir == "model" and ev else None
             cal_pairs = [(tuple(t["target"]), tuple(trial_pred(pred[id(t)][0]))) for t in cal if len(pred[id(t)][0])]
+            cal_rows += [{"subject_id": sid, "model": name, "target_u": tu, "target_v": tv, "raw_u": pu, "raw_v": pv}
+                         for (tu, tv), (pu, pv) in cal_pairs]
             corr = {n: C.fit_correction(cfg, n, cal_pairs) for n in LEVELS}
             ref = np.nanmedian(np.vstack([kabsch_deg(t["z"]["R_head"][t["rec_idx"]]) for t in cal]), 0) if cal else np.zeros(3)
             for t in ev:
@@ -103,6 +106,10 @@ def main():
         w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
         w.writeheader()
         w.writerows(rows)
+    with open(os.path.join(out_dir, "cal_trials.csv"), "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(cal_rows[0].keys()))
+        w.writeheader()
+        w.writerows(cal_rows)
     lines = ["# Offline re-inference (secondary analysis; frozen M8 = model)", "",
              f"subjects: {', '.join(summary['subjects'])}; mean error [cm] of evaluation trials (median of record frames), "
              "primary correction of config.json fitted on each model's own calibration-session predictions", ""]
