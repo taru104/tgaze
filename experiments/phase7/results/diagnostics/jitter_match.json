@@ -1,0 +1,160 @@
+{
+ "real_pilot": {
+  "source": "Phase 6 pilot subject_00 results/jitter.csv (frozen M8, raw frames, zero-shot), median over trials",
+  "NATURAL": {
+   "jitter_x_mm": 2.56,
+   "jitter_y_mm": 4.01,
+   "jitter_radial_mm": 5.97
+  },
+  "EYE_DOMINANT": {
+   "jitter_x_mm": 3.76,
+   "jitter_y_mm": 4.85,
+   "jitter_radial_mm": 6.82
+  },
+  "HEAD_ALLOWED": {
+   "jitter_x_mm": 3.53,
+   "jitter_y_mm": 5.43,
+   "jitter_radial_mm": 7.3
+  }
+ },
+ "reps": 24,
+ "n_per_fold": 150,
+ "folds": [
+  0,
+  1
+ ],
+ "models": {
+  "baseline/m8_p7": {
+   "0.0": {
+    "jitter_x_mm": 9.072812162984596e-15,
+    "jitter_y_mm": 0.0,
+    "jitter_radial_mm": 9.072812162984596e-15,
+    "trial_median_err_cm": 1.7813210822168846,
+    "frame_err_cm": 1.7813210822168846
+   },
+   "0.1": {
+    "jitter_x_mm": 2.2139718544076272,
+    "jitter_y_mm": 2.8502816816300642,
+    "jitter_radial_mm": 3.833695147171919,
+    "trial_median_err_cm": 1.779965613442104,
+    "frame_err_cm": 1.8186393063603656
+   },
+   "0.25": {
+    "jitter_x_mm": 5.6476745486256466,
+    "jitter_y_mm": 7.5243206271849425,
+    "jitter_radial_mm": 9.534816727619683,
+    "trial_median_err_cm": 1.8105928021700866,
+    "frame_err_cm": 1.989975923535932
+   },
+   "0.5": {
+    "jitter_x_mm": 10.976064680675918,
+    "jitter_y_mm": 14.955002091709975,
+    "jitter_radial_mm": 18.91747429109753,
+    "trial_median_err_cm": 1.8537895672433085,
+    "frame_err_cm": 2.462920350595077
+   },
+   "0.75": {
+    "jitter_x_mm": 16.284247986592902,
+    "jitter_y_mm": 21.81598245819525,
+    "jitter_radial_mm": 27.486568434147166,
+    "trial_median_err_cm": 1.949006168837696,
+    "frame_err_cm": 3.0402664798525025
+   },
+   "1.0": {
+    "jitter_x_mm": 21.316652752645176,
+    "jitter_y_mm": 27.673587375407884,
+    "jitter_radial_mm": 35.43722796908517,
+    "trial_median_err_cm": 2.0675341796050852,
+    "frame_err_cm": 3.6756952101290814
+   }
+  },
+  "robustness_aug/m8_noise0.25": {
+   "0.0": {
+    "jitter_x_mm": 9.072812162984596e-15,
+    "jitter_y_mm": 0.0,
+    "jitter_radial_mm": 9.072812162984596e-15,
+    "trial_median_err_cm": 1.8606180397200482,
+    "frame_err_cm": 1.8606180397200482
+   },
+   "0.1": {
+    "jitter_x_mm": 1.1310274154559723,
+    "jitter_y_mm": 1.7285538249392203,
+    "jitter_radial_mm": 2.134773656446698,
+    "trial_median_err_cm": 1.8641531546695804,
+    "frame_err_cm": 1.8729309302860049
+   },
+   "0.25": {
+    "jitter_x_mm": 2.7629220118177678,
+    "jitter_y_mm": 4.399994699148924,
+    "jitter_radial_mm": 5.340743132731611,
+    "trial_median_err_cm": 1.8537911963337854,
+    "frame_err_cm": 1.912357288074171
+   },
+   "0.5": {
+    "jitter_x_mm": 5.514232616222792,
+    "jitter_y_mm": 8.959566796232133,
+    "jitter_radial_mm": 10.634087570873177,
+    "trial_median_err_cm": 1.8796340383963517,
+    "frame_err_cm": 2.0760978350318586
+   },
+   "0.75": {
+    "jitter_x_mm": 8.185522434878765,
+    "jitter_y_mm": 13.23090598376221,
+    "jitter_radial_mm": 15.64569118540871,
+    "trial_median_err_cm": 1.9034346654801637,
+    "frame_err_cm": 2.3120092765200333
+   },
+   "1.0": {
+    "jitter_x_mm": 10.750404333471439,
+    "jitter_y_mm": 16.96426416641168,
+    "jitter_radial_mm": 20.539974594425686,
+    "trial_median_err_cm": 1.9285070218045437,
+    "frame_err_cm": 2.5917292850691305
+   }
+  },
+  "robustness_aug/m8_noise0.5": {
+   "0.0": {
+    "jitter_x_mm": 1.0887374595581517e-14,
+    "jitter_y_mm": 0.0,
+    "jitter_radial_mm": 1.0887374595581517e-14,
+    "trial_median_err_cm": 1.9558211894144646,
+    "frame_err_cm": 1.9558211894144646
+   },
+   "0.1": {
+    "jitter_x_mm": 0.940907528558038,
+    "jitter_y_mm": 1.4300788219530398,
+    "jitter_radial_mm": 1.7436355346766,
+    "trial_median_err_cm": 1.957136958301342,
+    "frame_err_cm": 1.963540645258901
+   },
+   "0.25": {
+    "jitter_x_mm": 2.3299819162936197,
+    "jitter_y_mm": 3.681722430294296,
+    "jitter_radial_mm": 4.402340597194609,
+    "trial_median_err_cm": 1.9530285069044777,
+    "frame_err_cm": 1.9902827292548357
+   },
+   "0.5": {
+    "jitter_x_mm": 4.500057543246792,
+    "jitter_y_mm": 7.301513679553882,
+    "jitter_radial_mm": 8.672658851635774,
+    "trial_median_err_cm": 1.9632051852881025,
+    "frame_err_cm": 2.1012623960195436
+   },
+   "0.75": {
+    "jitter_x_mm": 6.869335556395247,
+    "jitter_y_mm": 10.67126314927144,
+    "jitter_radial_mm": 12.859774121301287,
+    "trial_median_err_cm": 1.9889564593191584,
+    "frame_err_cm": 2.2728092359968675
+   },
+   "1.0": {
+    "jitter_x_mm": 9.155667841292303,
+    "jitter_y_mm": 14.023765307283806,
+    "jitter_radial_mm": 16.971978349954526,
+    "trial_median_err_cm": 1.9928558887966006,
+    "frame_err_cm": 2.457855155386129
+   }
+  }
+ }
+}

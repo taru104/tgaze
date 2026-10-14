@@ -1,0 +1,23 @@
+{
+ "iris +0.5px x": {
+  "mean_shift_cm": [
+   0.904,
+   -0.064
+  ],
+  "abs_shift_cm": 0.9161575056951898
+ },
+ "iris +0.5px y(down)": {
+  "mean_shift_cm": [
+   -0.261,
+   -1.059
+  ],
+  "abs_shift_cm": 1.1227024508870718
+ },
+ "iris +1px y(down)": {
+  "mean_shift_cm": [
+   -0.583,
+   -2.082
+  ],
+  "abs_shift_cm": 2.212276323420751
+ }
+}
