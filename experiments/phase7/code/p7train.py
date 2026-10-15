@@ -63,6 +63,9 @@ def build_args(argv=None):
     ap.add_argument("--eye-pca", type=int, default=0, help="diagnostic: append tgaze eye-patch PCA (fit on train) to the eye branch")
     ap.add_argument("--noise-aug", type=float, default=0.0, help="landmark noise augmentation sigma [px] (M8 only)")
     ap.add_argument("--noise-reps", type=int, default=2, help="noisy replicas of the training set")
+    ap.add_argument("--iris-aug", type=float, default=0.0,
+                    help="systematic iris-bias augmentation sigma [px]: per replica sample, ONE constant shift per eye applied to "
+                         "that eye's 5 iris landmarks (468-472 / 473-477); the eye patch is unchanged (cropped on the eye corners)")
     ap.add_argument("--head-angles", default="rich16d", choices=["rich16d", "none", "kabsch"],
                     help="last 3 dims of the M8 head_pose input: rich16d solvePnP (Phase 5), none (9D), kabsch Euler")
     ap.add_argument("--save-preds", type=int, default=1)
@@ -366,17 +369,27 @@ def run(args, fold, seed, base, prep_cache):
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, factor=0.5, patience=15)
     X_tr, X_va = inputs(tr), inputs(va)
     tr_lab = tr
-    if args.noise_aug > 0:
-        # landmark-noise augmentation: noisy replicas of the training samples (features recomputed exactly as at
-        # runtime: noisy landmarks -> tgaze rich16d -> features with the SAME template); labels unchanged
+    if args.noise_aug > 0 or args.iris_aug > 0:
+        # landmark-noise / iris-bias augmentation: perturbed replicas of the training samples (features recomputed exactly
+        # as at runtime: landmarks -> tgaze rich16d -> features with the SAME template); labels unchanged
         assert args.model == "m8"
         import p7infer as PI
         rng_n = np.random.default_rng([seed, 99])
         Wd, Hd = base["geometry"]["W"], base["geometry"]["H"]
         for rep in range(args.noise_reps):
-            lms_n = (base["LMS"][tr] + rng_n.normal(0, args.noise_aug, size=base["LMS"][tr].shape) / np.array([Wd, Hd, Wd])).astype(np.float32)
+            lms_n = base["LMS"][tr].astype(np.float64)
+            if args.noise_aug > 0:
+                lms_n = lms_n + rng_n.normal(0, args.noise_aug, size=lms_n.shape) / np.array([Wd, Hd, Wd])
+            if args.iris_aug > 0:
+                for sl in (slice(468, 473), slice(473, 478)):
+                    sh = rng_n.normal(0, args.iris_aug, size=(len(tr), 1, 2)) / np.array([Wd, Hd])
+                    lms_n[:, sl, :2] += sh
+            lms_n = lms_n.astype(np.float32)
             f16_n, _ = PI.rich16d_batch(lms_n, base["geometry"]["K_measured_raw"], Wd, Hd)
             Xn, _, _ = D.fold_features(base, None, lms=lms_n, f16=f16_n, template=template, head_angles=args.head_angles)
+            if geo.get("pca") is not None:
+                pc = geo["pca"]
+                Xn["eye_norm_r16"] = np.hstack([Xn["eye_norm_r16"], ((base["PATCH"][tr] - pc["mean"]) @ pc["components"].T).astype(np.float32)])
             for b in stats:
                 X_tr[b] = torch.cat([X_tr[b], T((Xn[b] - stats[b][0]) / stats[b][1])])
             tr_lab = np.concatenate([tr_lab, tr])
