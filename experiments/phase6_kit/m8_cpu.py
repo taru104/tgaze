@@ -235,21 +235,31 @@ class OfflineM8:
             so.intra_op_num_threads = int(threads)
         self.sess = ort.InferenceSession(self.onnx_path, so, providers=["CPUExecutionProvider"])
         assert self.sess.get_providers() == ["CPUExecutionProvider"]
+        pc = self.prep.get("eye_pca")
+        self.eye_pca = None if pc is None else (np.asarray(pc["mean"], np.float64), np.asarray(pc["components"], np.float64))
 
-    def predict_lms(self, lms):
-        """lms (N,478,3) (frames without a face may be NaN) -> uv (N,2) with NaN where no prediction, ok (N,)."""
+    def predict_lms(self, lms, patch=None):
+        """lms (N,478,3) (frames without a face may be NaN) -> uv (N,2) with NaN where no prediction, ok (N,).
+        EyePCA models also need patch (N,3072): the tgaze appearance.eye_patch saved by collect.py (npz "eye_patch");
+        frames whose patch is missing (NaN) get no prediction."""
         lms = np.asarray(lms, np.float64)
         uv = np.full((len(lms), 2), np.nan)
         ok = np.zeros(len(lms), bool)
         f16 = np.zeros((len(lms), 16))
+        if self.eye_pca is not None:
+            assert patch is not None, "this model needs the eye patches (npz key eye_patch)"
+            patch = np.asarray(patch, np.float64)
         for i, l in enumerate(lms):
-            if not np.isfinite(l).all():
+            if not np.isfinite(l).all() or (self.eye_pca is not None and not np.isfinite(patch[i]).all()):
                 continue
             f = self.rich16d.rich_16d_from_lms(l, self.w, self.h)
             if f is not None:
                 f16[i], ok[i] = f, True
         if ok.any():
             feats, _ = build_inputs(lms[ok], f16[ok], self.K_mir, self.w, self.h, self.template, self.head_angles)
+            if self.eye_pca is not None:
+                mean, comp = self.eye_pca
+                feats["eye_norm_r16"] = np.hstack([feats["eye_norm_r16"], ((patch[ok] - mean) @ comp.T).astype(np.float32)])
             uv[ok] = self.sess.run(["y"], {b: feats[b] for b in self.prep["branches"]})[0][:, :2]
         return uv, ok
 

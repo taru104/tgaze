@@ -69,7 +69,9 @@ def main():
             name = os.path.basename(os.path.normpath(mdir))
             pred = {}
             for t in cal + ev:
-                uv, ok = m.predict_lms(t["z"]["lms"][t["rec_idx"]])
+                z = t["z"]
+                uv, ok = m.predict_lms(z["lms"][t["rec_idx"]],
+                                       z["eye_patch"][t["rec_idx"]] if m.eye_pca is not None and "eye_patch" in z else None)
                 pred[id(t)] = (uv[ok], ok)
             live_diff = max(float(np.nanmax(np.abs(pred[id(t)][0] - t["z"]["uv_m8_raw"][t["rec_idx"]][pred[id(t)][1]])))
                             for t in ev[:10]) if mdir == "model" and ev else None
