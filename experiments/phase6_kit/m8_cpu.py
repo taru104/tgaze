@@ -238,6 +238,14 @@ class OfflineM8:
         pc = self.prep.get("eye_pca")
         self.eye_pca = None if pc is None else (np.asarray(pc["mean"], np.float64), np.asarray(pc["components"], np.float64))
 
+    def patch_resid_frac(self, patch):
+        """EyePCA models: fraction of the eye-patch variance NOT explained by the 16 PCA components (per frame).
+        Compare with prep["patch_pca_resid_frac_synthetic_test"]: real patches far above it are out of the training appearance."""
+        mean, comp = self.eye_pca
+        X = np.asarray(patch, np.float64) - mean
+        R = X - (X @ comp.T) @ comp
+        return (R ** 2).sum(1) / np.maximum((X ** 2).sum(1), 1e-12)
+
     def predict_lms(self, lms, patch=None):
         """lms (N,478,3) (frames without a face may be NaN) -> uv (N,2) with NaN where no prediction, ok (N,).
         EyePCA models also need patch (N,3072): the tgaze appearance.eye_patch saved by collect.py (npz "eye_patch");

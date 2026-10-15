@@ -67,12 +67,15 @@ def main():
         for mdir in models:
             m = m8_cpu.OfflineM8(mdir, K_raw, tgaze)
             name = os.path.basename(os.path.normpath(mdir))
-            pred = {}
+            pred, resid = {}, {}
             for t in cal + ev:
                 z = t["z"]
                 uv, ok = m.predict_lms(z["lms"][t["rec_idx"]],
                                        z["eye_patch"][t["rec_idx"]] if m.eye_pca is not None and "eye_patch" in z else None)
                 pred[id(t)] = (uv[ok], ok)
+                if m.eye_pca is not None and "eye_patch" in z:
+                    pr = m.patch_resid_frac(z["eye_patch"][t["rec_idx"]][ok]) if ok.any() else np.array([np.nan])
+                    resid[id(t)] = float(np.nanmedian(pr))
             live_diff = max(float(np.nanmax(np.abs(pred[id(t)][0] - t["z"]["uv_m8_raw"][t["rec_idx"]][pred[id(t)][1]])))
                             for t in ev[:10]) if mdir == "model" and ev else None
             cal_pairs = [(tuple(t["target"]), tuple(trial_pred(pred[id(t)][0]))) for t in cal if len(pred[id(t)][0])]
@@ -91,12 +94,17 @@ def main():
                      "target_u": t["target"][0], "target_v": t["target"][1], "raw_u": raw[0], "raw_v": raw[1],
                      "kabsch_pitch_deg": kd[0], "kabsch_yaw_deg": kd[1], "kabsch_roll_deg": kd[2],
                      "kabsch_delta_from_cal_deg": float(np.hypot(*(kd[:2] - ref[:2]))),
-                     "rich16d_pitch_deg": rd[0], "rich16d_yaw_deg": rd[1], "rich16d_roll_deg": rd[2]}
+                     "rich16d_pitch_deg": rd[0], "rich16d_yaw_deg": rd[1], "rich16d_roll_deg": rd[2],
+                     "patch_pca_resid_frac": resid.get(id(t), np.nan)}
                 for n, c in corr.items():
                     r[f"C{n}_err_cm"] = float(C.cm_err(c.apply(raw), t["target"]))
                 rows.append(r)
             ms = summary["models"].setdefault(name, {"dir": mdir, "onnx_sha256": C.sha256_file(m.onnx_path), "head_angles": m.head_angles,
-                                                     "live_vs_offline_max_abs_uv": {}})
+                                                     "eye_pca": m.eye_pca is not None, "live_vs_offline_max_abs_uv": {},
+                                                     "patch_pca_resid_frac_real_median": {},
+                                                     "patch_pca_resid_frac_synthetic_test": m.prep.get("patch_pca_resid_frac_synthetic_test")})
+            if resid:
+                ms["patch_pca_resid_frac_real_median"][sid] = float(np.nanmedian(list(resid.values())))
             if live_diff is not None:
                 ms["live_vs_offline_max_abs_uv"][sid] = live_diff
             print(f"[reinfer] {sid} {name}: {sum(1 for r in rows if r['subject_id'] == sid and r['model'] == name)} trials"
@@ -123,6 +131,11 @@ def main():
         summary["models"][name]["mean_err_cm"] = tab
         lines += [f"## {name} (head_angles = {summary['models'][name]['head_angles']})", "",
                   "| points | " + " | ".join(CONDS) + " | all |", "|---|" + "---:|" * (len(CONDS) + 1)]
+        mm = summary["models"][name]
+        if mm.get("patch_pca_resid_frac_real_median"):
+            ref = mm["patch_pca_resid_frac_synthetic_test"] or {}
+            lines[-2:-2] = [f"eye-patch PCA residual fraction (median per subject): {mm['patch_pca_resid_frac_real_median']}; "
+                            f"synthetic test p50 {ref.get('p50', float('nan')):.3f} / p95 {ref.get('p95', float('nan')):.3f}", ""]
         for n in LEVELS:
             lines.append(f"| {n} | " + " | ".join(f"{tab[c][f'C{n}']:.2f}" if tab[c][f"C{n}"] is not None else "-" for c in CONDS + ("ALL",)) + " |")
         lines.append("")

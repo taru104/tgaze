@@ -188,3 +188,41 @@ python cal_variants.py outputs/real_mac_validation         # live（凍結 M8）
 - **キャリブ後の精度は M8 + EyePCA が最良（0.95〜0.97 cm）:**
   - 系統ずれ拡張は、キャリブなし（zero-shot）でずれがある場合にだけ少し効きます。キャリブ後はむしろ 0.05 cm ほど悪くなります。
   - 本番の候補は、拡張なしの EyePCA と考えます。
+
+## 6. EyePCA を Mac で再推論する準備（`models_alt/m8_eyepca16*`）
+
+- **モデル:**
+  - Phase 5 の最終分割（学習 16 人、検証 [6,17]、テスト [7,11]）で 3 seed 学習し、検証誤差が最小のもの（どちらも seed 2）を採用しました。
+  - head_pose は rich16d 角度ありの 12 次元で、CV で評価したものと同じ構成です。
+
+| ディレクトリ | 内容 | テスト [7,11] | ONNX sha256 |
+|---|---|---:|---|
+| `m8_eyepca16/` | M8 + 目パッチ PCA16 | 2.30 cm | `76166656…729978b7` |
+| `m8_eyepca16_iris0.5/` | 上と同じ + 系統ずれ拡張（σ 0.5px） | 2.21 cm | `0f9add6f…42bae6a5` |
+
+（参考: 凍結 M8 は同じテスト人物で 2.44 cm、9 次元モデルは 2.16 cm）
+
+- **入力:**
+  - eye_norm_r16 は 184 次元です。ランドマーク 168 次元に、tgaze `appearance.eye_patch`（48x32 CLAHE、両目、反転後のフレーム）の PCA16 を足しています。
+  - PCA は `final_model_preprocessing.json` の `eye_pca` に入っていて、ONNX の外（NumPy）で掛けます。
+  - collect.py が試行 npz に保存している `eye_patch`（float16）がそのまま使えます。目パッチの切り出し方は、合成データの抽出と同じです。
+- **検証:**
+  - `OfflineM8` の出力は torch と一致しました。最大差は float32 パッチで 2.5e-7、float16 パッチで 7e-5 です。
+  - ONNX の CPU 速度は MediaPipe 込みで 24〜27 FPS です。
+  - 偽カメラの 1 セッションで、reinfer → cal_variants が通ることを確認しました。数字はパイプラインの確認用です。
+- **見た目の外れ具合の指標:**
+  - EyePCA のモデルでは、`trials.csv` に `patch_pca_resid_frac` を出力します。目パッチのうち PCA16 で説明できない分散の割合です。
+  - `summary.md` には被験者ごとの中央値を出します。合成テスト人物では中央値 0.26、95 パーセンタイル 0.40 です。
+  - 実機の値がこれより大きいほど、目の見た目が学習データから外れています。
+
+### Mac での手順
+
+```bash
+cd ~/tgaze && git fetch origin && git switch experiment/phase6-followup
+cd experiments/phase6_kit && . .venv/bin/activate
+python reinfer_offline.py outputs/real_mac_validation     # 凍結 M8 + models_alt/* 全部（EyePCA 2つを含む）
+python cal_variants.py outputs/real_mac_validation        # 全モデルでキャリブ方法を比較
+```
+
+- **push してよい出力:** `reinfer/`（trials.csv、cal_trials.csv、summary.*）と `cal_variants/` です。試行中央値・角度・残差の割合だけで、顔データは含みません。
+- **push しないもの:** `subject_*` 以下の npz や画像です。
