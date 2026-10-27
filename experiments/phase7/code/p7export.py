@@ -19,7 +19,7 @@ import landmark_features as lf  # noqa: E402
 run_dir, name = sys.argv[1], sys.argv[2]
 out = os.path.join(D.OUT_ROOT, "cpu_runtime", name)
 os.makedirs(out, exist_ok=True)
-base = D.load_base()
+base = D.load_run_base(run_dir)                  # pred.npz indices refer to the run's (possibly merged) base
 r = I.Runner(run_dir, base)
 sd = {k: v.numpy() for k, v in r.ck["state_dict"].items()}
 np.savez(os.path.join(out, "weights.npz"), **sd)

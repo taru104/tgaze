@@ -300,3 +300,39 @@ def evaluate(base, idx, pred_uv, full=True):
     out["by_group_type"] = {t: stats(cm[base["gtype"][idx] == t]) for t in sorted(set(base["gtype"][idx]))}
     out["pose_invariance_cm"] = pose_invariance(base, idx, pred_uv)
     return out
+
+
+def run_roots(run_dir):
+    """Dataset roots a p7train.py run was trained on: v2 plus its --root (same order as p7train.main)."""
+    root = json.load(open(os.path.join(run_dir, "result.json")))["config"].get("root")
+    return [DATA_V2] + ([r if os.path.isabs(r) else os.path.join(PROJECT, r) for r in root.split(",")] if root else [])
+
+
+def load_run_base(run_dir):
+    """The base whose indices the run's pred.npz refers to (v2 alone, or v2 merged with --root datasets as in p7train)."""
+    roots = run_roots(run_dir)
+    if len(roots) == 1:
+        return load_base()
+    bases = [load_base(r) for r in roots]
+    out = {}
+    for k in bases[0]:
+        if k == "geometry":
+            g = dict(bases[0]["geometry"])
+            for b in bases[1:]:
+                for key in ("P_C", "P_N", "P_R", "P_U"):
+                    assert np.abs(np.array(b["geometry"][key]) - np.array(g[key])).max() < 1e-4, "display geometry differs"
+                g["identities"] = sorted(set(g["identities"]) | set(b["geometry"]["identities"]))
+            out[k] = g
+        else:
+            out[k] = np.concatenate([b[k] for b in bases])
+    return out
+
+
+def image_path(roots, ident, sample_id):
+    """Rendered image of a sample; datasets after Phase 7E keep JPEG (q92) instead of the lossless PNG."""
+    for root in roots:
+        for ext in (".png", ".jpg"):
+            p = os.path.join(root, f"identity_{ident:02d}", "images", f"{sample_id}{ext}")
+            if os.path.exists(p):
+                return p
+    raise FileNotFoundError(f"identity {ident} sample {sample_id}")

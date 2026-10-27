@@ -224,10 +224,11 @@ def main():
         print(f"[{name}] onnx max |diff| vs torch {diff:.2e}; runtime-feature max |diff| vs training inputs {fd:.2e}", flush=True)
         assert diff < 1e-3 and fd < 1e-3
         if frames is None:
-            base = D.load_base()
+            base = D.load_run_base(prep["source_run"])
+            roots = D.run_roots(prep["source_run"])
             te = np.load(os.path.join(prep["source_run"], "pred.npz"))["te"]
             sel = np.random.default_rng(0).choice(te, a.frames, replace=False)
-            frames = [cv2.imread(os.path.join(D.DATA_V2, f"identity_{base['ident'][i]:02d}", "images", f"{base['sample_id'][i]}.png")) for i in sel]
+            frames = [cv2.imread(D.image_path(roots, int(base["ident"][i]), base["sample_id"][i])) for i in sel]
             uv_true = base["UV"][sel]
         for f in frames[:10]:
             pl.frame(f)
