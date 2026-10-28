@@ -1,0 +1,45 @@
+{
+ "image": "generator_scene_behind_left.png",
+ "size_px": [
+  2400,
+  1300
+ ],
+ "origin": "top-left, x right, y down",
+ "camera_webcam_px": [
+  722.0,
+  844.7
+ ],
+ "gaze_point_px": [
+  682.1,
+  1052.9
+ ],
+ "eye_center_px": {
+  "left": [
+   1474.9,
+   276.5
+  ],
+  "right": [
+   1382.2,
+   263.9
+  ],
+  "cyclopean": [
+   1428.2,
+   270.2
+  ]
+ },
+ "scene": {
+  "generator": "scripts/generate_gaze_dataset_v2.py Generator.build() (Phase 5 v2)",
+  "identity": 1,
+  "gaze_target_uv": [
+   0.4,
+   -0.4
+  ],
+  "gaze_target_screen_xy_m": [
+   0.058120000000000005,
+   -0.0378
+  ],
+  "eye_to_screen_center_m": 0.6197387293959986,
+  "head_pose": "neutral",
+  "view": "behind-left of the laptop, above; lid and screen semi-transparent"
+ }
+}
