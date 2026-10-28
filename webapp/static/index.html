@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tgaze</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- 共通ヘッダー（キャリブレーション中・準備完了画面では隠す） -->
+<header class="topbar" id="topbar">
+  <a class="brand" href="#/"><span class="menu" aria-hidden="true">≡</span>tgaze</a>
+  <nav class="mainnav" id="mainnav">
+    <a href="#/" data-nav="home">ホーム</a>
+    <a href="#/" data-nav="howto" data-scroll="howto">使い方</a>
+    <a href="#/" data-nav="scenes" data-scroll="scenes">活用シーン</a>
+    <a href="#/results" data-nav="results">記録・分析</a>
+  </nav>
+  <ol class="steps" id="steps" hidden>
+    <li data-step="1"><b>1</b>準備</li>
+    <li data-step="2"><b>2</b>説明</li>
+    <li data-step="3"><b>3</b>キャリブレーション</li>
+    <li data-step="4"><b>4</b>完了</li>
+  </ol>
+  <div class="measurebar" id="measurebar" hidden>
+    <span class="rec"><i></i>計測中</span>
+    <span class="timer" id="timer">00:00</span>
+    <button class="btn ghost sm" id="btnPause">一時停止</button>
+    <button class="btn danger sm" id="btnStop">✕ 終了</button>
+  </div>
+  <a class="btn primary sm" id="btnOpenApp" href="#/check">アプリを開く</a>
+</header>
+
+<main>
+
+<!-- ① ランディング -->
+<section class="page" id="page-home">
+  <div class="hero">
+    <div class="hero-text">
+      <h1>視線で、<br>人とデジタルの関係を<br>もっと自然に。</h1>
+      <p>tgaze は、Webカメラだけで視線の動きをリアルタイムに計測・可視化する Web アプリケーションです。</p>
+      <a class="btn primary lg" href="#/check">今すぐ体験する →</a>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 420 320">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b7bff"/><stop offset="1" stop-color="#6a2cff"/></linearGradient>
+          <radialGradient id="g2"><stop offset="0" stop-color="#7fb0ff"/><stop offset="1" stop-color="#2f6bff"/></radialGradient>
+        </defs>
+        <path d="M40 160 Q210 20 380 160 Q210 300 40 160Z" fill="none" stroke="url(#g1)" stroke-width="10"/>
+        <circle cx="210" cy="160" r="62" fill="url(#g2)"/>
+        <circle cx="210" cy="160" r="26" fill="#13194a"/>
+        <circle cx="226" cy="144" r="9" fill="#fff" opacity=".9"/>
+        <g fill="#2f6bff" opacity=".85">
+          <circle cx="340" cy="60" r="10"/><circle cx="372" cy="250" r="16"/><circle cx="70" cy="270" r="7"/>
+        </g>
+        <path d="M300 300 L360 200 L400 300Z" fill="url(#g1)" opacity=".8"/>
+      </svg>
+    </div>
+  </div>
+  <ul class="features">
+    <li><span class="ic">◎</span>リアルタイム推定</li>
+    <li><span class="ic">⚙</span>簡単セットアップ</li>
+    <li><span class="ic">🛡</span>この PC の中だけで動作</li>
+    <li><span class="ic">▥</span>データの記録・分析</li>
+  </ul>
+  <div class="cards" id="howto">
+    <h2>使い方</h2>
+    <ol class="howto">
+      <li><b>カメラ確認</b>顔の位置と明るさをチェック</li>
+      <li><b>キャリブレーション</b>画面の9点を順番に見る（約30秒）</li>
+      <li><b>計測</b>画面のどこを見ているかをリアルタイムに表示</li>
+      <li><b>分析</b>注視点の分布・エリアごとの注視時間・CSV 書き出し</li>
+    </ol>
+  </div>
+  <div class="cards" id="scenes">
+    <h2>活用シーン</h2>
+    <div class="scene-grid">
+      <div><b>Web ページの評価</b>どこが読まれ、どこが見落とされているか</div>
+      <div><b>学習・プレゼン</b>資料のどこに注目が集まるか</div>
+      <div><b>アクセシビリティ</b>視線による操作の入り口に</div>
+    </div>
+  </div>
+</section>
+
+<!-- ② カメラ・姿勢確認 -->
+<section class="page narrow" id="page-check" hidden>
+  <div class="pagehead"><a class="back" href="#/">←</a><h2>カメラと姿勢を確認しましょう</h2></div>
+  <p class="lead">正確な視線推定のために、以下を確認してください。</p>
+  <div class="check-grid">
+    <div class="camwrap">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="facebox" id="facebox" hidden></div>
+      <div class="camerr" id="camerr" hidden></div>
+    </div>
+    <ul class="checklist" id="checklist">
+      <li data-k="face_full"><i></i>顔全体が映っている</li>
+      <li data-k="eyes_open"><i></i>目がはっきり見えている</li>
+      <li data-k="frontal"><i></i>正面を向いている</li>
+      <li data-k="bright"><i></i>明るい場所である</li>
+    </ul>
+  </div>
+  <p class="hint" id="checkhint">カメラの使用を許可してください。</p>
+  <div class="actions"><button class="btn primary lg" id="btnCheckNext" disabled>次へ →</button></div>
+</section>
+
+<!-- ③ キャリブレーション説明 -->
+<section class="page narrow" id="page-guide" hidden>
+  <h2 class="center">キャリブレーションの手順</h2>
+  <p class="lead center">画面全体の9点を順番に見て、視線の基準を合わせます。<br>各点は数秒間表示され、自動的に次の点に進みます。</p>
+  <div class="guide-grid">
+    <div class="dots9" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <ol class="numlist">
+      <li>中央の点から開始します</li>
+      <li>点が表示されたら、その点を見続けてください</li>
+      <li>自動で次の点に進みます</li>
+      <li>9点で完了です</li>
+    </ol>
+  </div>
+  <div class="tips">
+    <b>うまく計測するためのポイント</b>
+    <ul>
+      <li>画面から 40〜70cm の距離でご利用ください</li>
+      <li>頭を大きく動かさず、リラックスしてください</li>
+      <li>できるだけ画面全体を使って行います</li>
+    </ul>
+    <label class="screen-size">画面の大きさ（誤差を cm で表示するため）
+      <select id="screenSize">
+        <option value="13.3">13.3 インチ</option>
+        <option value="13.6" selected>13.6 インチ（MacBook Air 13）</option>
+        <option value="14">14 インチ</option>
+        <option value="15.3">15.3 インチ</option>
+        <option value="15.6">15.6 インチ</option>
+        <option value="16">16 インチ</option>
+        <option value="24">24 インチ</option>
+        <option value="27">27 インチ</option>
+      </select>
+    </label>
+  </div>
+  <div class="actions two"><a class="btn ghost" href="#/check">戻る</a><a class="btn primary" href="#/ready">キャリブレーションを開始 →</a></div>
+</section>
+
+<!-- ④ 準備完了・フルスクリーン案内 -->
+<section class="page narrow" id="page-ready" hidden>
+  <div class="ready">
+    <div class="fsicon" aria-hidden="true">⤢</div>
+    <h2>まもなく全画面で<br>キャリブレーションを開始します</h2>
+    <ul class="readylist">
+      <li>ブラウザのヘッダーやメニューは非表示になります</li>
+      <li>画面全体の9点を使用します</li>
+      <li>Esc キーでいつでも中止できます</li>
+    </ul>
+    <button class="btn primary lg" id="btnStartCalib">全画面で開始する →</button>
+    <a class="link" href="#/guide">キャンセル</a>
+  </div>
+</section>
+
+<!-- ⑤ キャリブレーション（全画面・9点） -->
+<section class="calib" id="page-calib" hidden>
+  <div class="calib-progress"><span id="calibCount">1 / 9</span><div class="bar"><i id="calibBar"></i></div></div>
+  <div class="calib-dot" id="calibDot"><i></i></div>
+  <div class="calib-msg" id="calibMsg"></div>
+</section>
+
+<!-- ⑥ キャリブレーション完了 -->
+<section class="page narrow" id="page-done" hidden>
+  <div class="done">
+    <div class="okmark" id="doneMark">✓</div>
+    <h2 id="doneTitle">キャリブレーションが完了しました！</h2>
+    <p class="lead" id="doneLead">視線の推定が可能になりました。<br>精度を確認し、必要に応じて再調整してください。</p>
+    <div class="testbox">
+      <b>テスト結果（参考値）</b>
+      <div class="stats3">
+        <div><small>平均誤差</small><strong id="doneErr">–</strong><em id="doneErrSub"></em></div>
+        <div><small>有効点数</small><strong id="donePts">–</strong></div>
+        <div><small>精度の安定性</small><strong id="doneStab">–</strong></div>
+      </div>
+      <p class="note">平均誤差は、9点のうち1点を除いて学習し、除いた点を予測したときのずれの平均です（leave-one-point-out）。</p>
+    </div>
+    <div class="actions two"><a class="btn ghost" href="#/ready">再キャリブレーション</a><a class="btn primary" href="#/measure">計測を開始 →</a></div>
+  </div>
+</section>
+
+<!-- ⑦ リアルタイム計測 -->
+<section class="page measure" id="page-measure" hidden>
+  <div class="stage" id="stage">
+    <!-- 計測対象のサンプルページ（data-area がエリア分析の単位） -->
+    <div class="demo" id="demo">
+      <div class="demo-nav" data-area="ナビゲーション"><b>Sample Expo 2026</b><span>概要</span><span>応募方法</span><span>審査</span><span>FAQ</span></div>
+      <div class="demo-visual" data-area="メインビジュアル">
+        <small>アイデアで、未来をもっと良くする！</small>
+        <h3>学生アイデア<br>コンテスト 2026</h3>
+        <p class="prize">最優秀賞 <b>50</b>万円</p>
+      </div>
+      <div class="demo-text" data-area="説明文エリア">
+        <p>あなたのアイデアを、みんなに伝えよう。テーマは自由。個人・チームどちらでも応募できます。</p>
+        <p>応募締切：2026年12月20日　／　結果発表：2027年2月</p>
+      </div>
+      <div class="demo-cta" data-area="エントリーボタン">
+        <span class="cta1">エントリーはこちら ▶</span><span class="cta2">エントリーシートダウンロード ↓</span>
+      </div>
+    </div>
+    <canvas id="trail"></canvas>
+    <div class="gazedot" id="gazedot" hidden></div>
+    <div class="paused" id="pausedBadge" hidden>一時停止中</div>
+    <div class="noface" id="nofaceBadge" hidden>顔が検出できません</div>
+  </div>
+  <aside class="panel" id="panel">
+    <b>表示設定</b>
+    <label class="sw"><span>視線の点を表示</span><input type="checkbox" id="optDot" checked><i></i></label>
+    <label class="sw"><span>軌跡を表示</span><input type="checkbox" id="optTrail"><i></i></label>
+    <label class="sw"><span>カメラプレビュー</span><input type="checkbox" id="optCam" checked><i></i></label>
+    <label class="rng"><span>点のサイズ</span><input type="range" id="optSize" min="10" max="60" value="28"></label>
+    <label class="rng"><span>軌跡の長さ</span><input type="range" id="optLen" min="10" max="200" value="60"></label>
+    <div class="miniCam" id="miniCam"></div>
+    <p class="note">ページ上をクリックすると、その位置を正解として視線のずれを補正します。</p>
+    <button class="btn ghost sm" id="btnFull">全画面にする</button>
+  </aside>
+</section>
+
+<!-- ⑧ 結果分析 -->
+<section class="page results" id="page-results" hidden>
+  <aside class="side">
+    <a data-tab="summary" class="on">▦ サマリー</a>
+    <a data-tab="heat">◉ 注視点の分布</a>
+    <a data-tab="path">↝ 視線の軌跡</a>
+    <a data-tab="areas">▤ エリア分析</a>
+    <a data-tab="time">◷ 時間別データ</a>
+    <a data-tab="compare">⇆ 比較</a>
+    <a data-tab="report">▢ レポート</a>
+  </aside>
+  <div class="rmain">
+    <div class="rhead">
+      <h2 id="rTitle">サマリー</h2>
+      <select id="sessionSel"></select>
+      <button class="btn ghost sm" id="btnCsv">⇩ CSV出力</button>
+    </div>
+    <div id="rEmpty" class="empty" hidden>まだ計測データがありません。<a href="#/check">計測を始める →</a></div>
+    <div id="rBody">
+      <div class="tab" data-tab="summary">
+        <div class="kpis">
+          <div><small>計測時間</small><strong id="kDur">–</strong></div>
+          <div><small>注視回数</small><strong id="kFix">–</strong></div>
+          <div><small>平均注視時間</small><strong id="kMean">–</strong></div>
+          <div><small>ページ滞在時間</small><strong id="kDwell">–</strong></div>
+        </div>
+        <div class="two-col">
+          <div><b>視線の軌跡（点表示）</b><div class="thumb" id="thumbSummary"></div></div>
+          <div><b>エリア別の注視時間</b><ul class="arealist" id="areaList"></ul></div>
+        </div>
+      </div>
+      <div class="tab" data-tab="heat" hidden><p class="note">注視点（同じ場所を 0.1 秒以上見ていた点）の密度です。赤いほど長く見ています。</p><div class="thumb big" id="thumbHeat"></div></div>
+      <div class="tab" data-tab="path" hidden><p class="note">注視点を時間順に結んだ線です。円の大きさは注視時間、数字は順番です（最初の30個）。</p><div class="thumb big" id="thumbPath"></div></div>
+      <div class="tab" data-tab="areas" hidden><div id="areaBars"></div></div>
+      <div class="tab" data-tab="time" hidden><p class="note">視線の横位置（青）と縦位置（紫）の時間変化です（0 = 左・上、1 = 右・下）。</p><canvas id="timeChart" height="260"></canvas></div>
+      <div class="tab" data-tab="compare" hidden><table class="cmp" id="cmpTable"></table></div>
+      <div class="tab" data-tab="report" hidden><div id="report"></div><button class="btn ghost sm" onclick="window.print()">印刷 / PDF に保存</button></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<script src="app.js"></script>
+</body>
+</html>
