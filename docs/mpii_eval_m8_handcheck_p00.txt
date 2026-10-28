@@ -1,0 +1,22 @@
+p00: K fx=994.74 fy=998.17 cx=624.66 cy=364.09; screen 286.4708x179.0442 mm / 1280x800 px
+monitorPose R=
+[[-0.99698  0.00845 -0.07722]
+ [ 0.01082  0.99948 -0.03038]
+ [ 0.07692 -0.03112 -0.99655]]
+T=[115.817  -3.84  -30.643] mm
+
+day01/0005.jpg: gaze px (476,758) -> screen (106.53,169.64) mm
+  A  px->3D [ 11.041  166.8692 -27.7282] vs annotated gt [ 11.040978 166.869249 -27.728178]  |diff| 7.30e-07 mm
+  B  pixel/mirror round trip of gt, fc: 1.78e-15, 7.94e-15 mm
+  C  eye E [ 28.62   5.12 562.57] -> gt on the M8 display uv (-0.0816,-0.7239) [eval json [-0.0816 -0.7239]] -> back on the screen (106.5313,169.6444,-6.9e-14) mm, |diff| 8.52e-07 mm
+     M8 prediction uv [-0.1579 -0.4923] -> screen [ 94.68 146.87] mm (truth [106.53 169.64])
+day01/0030.jpg: gaze px (1078,693) -> screen (241.26,155.10) mm
+  A  px->3D [-123.4056  153.7877  -16.9119] vs annotated gt [-123.405644  153.787666  -16.911922]  |diff| 5.80e-07 mm
+  B  pixel/mirror round trip of gt, fc: 5.68e-14, 1.91e-14 mm
+  C  eye E [-11.03  16.22 527.82] -> gt on the M8 display uv (0.8260,-0.6206) [eval json [ 0.826  -0.6206]] -> back on the screen (241.2621,155.0970,1.5e-13) mm, |diff| 7.70e-07 mm
+     M8 prediction uv [ 0.9318 -0.6475] -> screen [256.9  157.26] mm (truth [241.26 155.1 ])
+day01/0031.jpg: gaze px (126,598) -> screen (28.20,133.84) mm
+  A  px->3D [ 88.8336 130.2312 -32.6391] vs annotated gt [ 88.833604 130.231245 -32.639103]  |diff| 4.75e-07 mm
+  B  pixel/mirror round trip of gt, fc: 1.42e-14, 7.94e-15 mm
+  C  eye E [ 35.27  11.99 526.34] -> gt on the M8 display uv (-0.5902,-0.3432) [eval json [-0.5902 -0.3432]] -> back on the screen (28.1995,133.8355,1.8e-14) mm, |diff| 8.19e-07 mm
+     M8 prediction uv [-0.5612  0.5421] -> screen [32.2  44.82] mm (truth [ 28.2  133.84])
