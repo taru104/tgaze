@@ -194,3 +194,69 @@ python reinfer_offline.py outputs/real_mac_validation \
 - 凍結 M8（`model/`）は基準として必ず一緒に計算されます。
 - `--out` を付けているのは、前回の `reinfer/` を上書きしないためです。
 - EyePCA 版は、trial の npz に `eye_patch` が入っている必要があります（`config.json` の `save_eye_patch: true` で撮ったもの）。
+
+## 6. Phase 8 の 1234 人で学習した M8（副次解析用）
+
+Phase 8（見た目を人ごとに変えた合成データ）で学習済みの重みを、キットの形に書き出しただけです。**学習し直していません。**
+
+- **副次解析用です。** 本番の `model/`（sha256 `db19af0b…c25e`）と `config.json` は変えていません。書き出しの前後で sha256 が一致することを確認しました。
+- 本番の撮影では使わないでください。
+
+| ディレクトリ | 入力 | 元の run | ONNX sha256 | ONNX サイズ |
+|---|---|---|---|---:|
+| `m8_phase8_1234/` | ランドマークのみ（head_pose 12次元 = rich16d 角度あり、eye_norm_r16 168次元） | `phase8/v4_m8_1234ids/fold0_seed0` | `fc4ef617cbbe35b947c9df9fa4ddfb3e222784b7f56b503042661c1dc50a19e8` | 87,114 B |
+| `m8_eyepca16_phase8_1234/` | 上記 + 目の画像の PCA16（EyePCA、npz の `eye_patch` が必要） | `phase8/v4_eyepca16_1234ids/fold0_seed0` | `e9ed477629495b4b94b4b703ef04d3dc7a63a9e45a34d222c69efa95fdffbac5` | 91,347 B |
+
+学習データ（2つとも同じ分割、`split_v4_1234ids.json`）:
+
+- **学習:** 1234 人、146,800 枚。
+  - `gaze_dataset_v3_app` の 234 人 × 200 枚（id 200–436。生成に失敗した 271 と、landmarks が空だった 435・436 を除く）。
+  - `gaze_dataset_v4_1k` の 1000 人 × 100 枚（id 2000–3004。失敗した 5 人は別の id で補充）。
+  - 生成器はどちらも `generate_gaze_dataset_v3.py`。v2 と同じ幾何・視線と頭の動かし方に、人ごとの肌・虹彩・眉・まつ毛・まぶたの動き・照明・カメラの劣化（ノイズ・ぼけ・JPEG・露出）・髪を加えたもの。眼鏡と服はありません。
+- **人ごとの重み:** そろえていません。損失はサンプルの平均です。v3 の 1 人（200 枚）は v4 の 1 人（100 枚）の 2 倍の重みになります。
+- **検証:** id 500–518（519 は生成失敗）、3,800 枚。早期終了に使用。
+- **テスト:** id 520–599（559 は生成失敗）、15,800 枚。A = 520–559（学習と同じ肌）、B = 560–599（学習に使わない 4 種の肌だけ）。
+- 学習に v2（Phase 5）や Phase 7 の人は入っていません。
+
+seed の選び方:
+
+- どちらも **seed 0 だけ**を学習しています。選んでいません。
+  - 検証 cm: `m8_phase8_1234` 3.047、`m8_eyepca16_phase8_1234` 2.225
+
+合成テスト（個人補正なし = 0 点、5 点、9 点。補正は p7calib と同じ primary 補正、λ 25）:
+
+| モデル | テスト | 平均 cm | P95 | 0 点 | 5 点 | 9 点 |
+|---|---|---:|---:|---:|---:|---:|
+| `m8_phase8_1234` | A（39 人） | 2.78 | 5.87 | 2.75 | 2.33 | 2.23 |
+| | B（40 人） | 2.79 | 5.91 | 2.76 | 2.39 | 2.35 |
+| | clean（Phase 7 の 120–139） | 2.53 | 5.53 | 2.51 | 2.06 | 2.06 |
+| `m8_eyepca16_phase8_1234` | A | 2.06 | 4.45 | 2.04 | 1.60 | 1.53 |
+| | B | 2.33 | 5.00 | 2.31 | 1.74 | 1.70 |
+| | clean | 1.77 | 3.95 | 1.75 | 1.37 | 1.39 |
+
+- 「0 点」は補正に使ったサンプルを除いて測るので、平均 cm と少し違います。
+- いずれも合成データの数字で、実機の精度ではありません。
+- clean は見た目が一様なテストです。§5 の `m8_all120` / `m8_eyepca16_all120`（clean 相当の 120–139 で 1.946 / 1.183 cm）と比べると、clean では Phase 8 版のほうが悪く、見た目を変えたテスト（A・B）では Phase 8 版のほうがよくなっています（Phase 7E の all120 は A 4.77 / 4.55 cm、`eval_before.json`）。
+
+書き出しと検証（`experiments/phase7/code/run_kit_phase8_1234.sh`）:
+
+- `p7export.py` → `p7onnx_bench.py` → `p7bundle_kit.py`。§5 と同じ手順です。
+- **ONNX と torch の最大差**（合成テスト 64 枚）: 両方 8.9e-8。NumPy の特徴量と学習時の入力の差は 2.2e-7 / 1.2e-6。
+- **キットの `OfflineM8` で lms から予測し直した場合**: `m8_phase8_1234` は torch と差 0。`m8_eyepca16_phase8_1234` は 3.6e-7（float32 の目の画像）、`reference_io.npz` の float16 の目の画像では 1.0e-4 です。
+- **CPU**（Xeon Gold 6134、CPUExecutionProvider のみ、torch なし）: 29.4 FPS / 26.1 FPS（`experiments/phase7/results/cpu_runtime/benchmark_kit_phase8_1234.json`）。
+- `final_model_preprocessing.json` に `source_run`、`training_data`（id・人数・枚数・構成・人ごとの重み）、`seed_selection`、`synthetic_test_metrics`（A / B / clean、0/1/5/9 点）を書いています。EyePCA 版には `patch_pca_resid_frac_synthetic_test`（中央値 0.258）も入っています。
+- `p7data.py` に `P7_CACHE_DIR` を追加しました（v4_1k のデータキャッシュがデータ用 HDD にあるため）。既定の場所にキャッシュがあれば動作は今までと同じです。
+
+Mac で再推論する場合:
+
+```bash
+cd ~/tgaze && git fetch origin && git switch experiment/m8-phase8
+cd experiments/phase6_kit && . .venv/bin/activate
+python reinfer_offline.py outputs/real_mac_validation \
+    --models models_alt/m8_phase8_1234 models_alt/m8_eyepca16_phase8_1234 \
+    --subjects subject_00 --out outputs/real_mac_validation/reinfer_phase8
+```
+
+- 凍結 M8（`model/`）は基準として必ず一緒に計算されます。`--out` で前回の結果を上書きしません。
+- EyePCA 版は、trial の npz に `eye_patch` が入っている必要があります。
+- ライブのデモで使う場合は `M8Runtime(cfg, tgaze, K, model_dir="models_alt/m8_eyepca16_phase8_1234")` で差し替えます（§3 と同じ）。

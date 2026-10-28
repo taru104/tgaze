@@ -56,7 +56,11 @@ def dump_json(obj, path):
 
 def load_base(root=DATA_V2, cache=None):
     """All samples of a dataset root -> dict of arrays (labels + raw MediaPipe outputs). Cached as npz."""
-    cache = cache or os.path.join(OUT_ROOT, "cache", os.path.basename(os.path.normpath(root)) + "_base.npz")
+    name = os.path.basename(os.path.normpath(root)) + "_base.npz"
+    cache = cache or os.path.join(OUT_ROOT, "cache", name)
+    # P7_CACHE_DIR (e.g. on the data HDD) holds caches that do not exist yet in the default location
+    if not os.path.exists(cache) and os.environ.get("P7_CACHE_DIR"):
+        cache = os.path.join(os.environ["P7_CACHE_DIR"], name)
     sig = json.dumps(sorted((os.path.basename(dd), os.path.getsize(os.path.join(dd, "landmarks.npz")))
                             for dd in glob.glob(os.path.join(root, "identity_*")) if os.path.exists(os.path.join(dd, "landmarks.npz"))))
     if os.path.exists(cache):
@@ -71,6 +75,8 @@ def load_base(root=DATA_V2, cache=None):
         if not os.path.exists(os.path.join(dd, "landmarks.npz")):
             continue
         k = int(dd.rsplit("_", 1)[1])
+        if len(statics) % 50 == 0:
+            print(f"[data] {os.path.basename(os.path.normpath(root))}: loaded {len(statics)} identities", flush=True)
         statics[k] = json.load(open(os.path.join(dd, "scene_static.json")))
         z = np.load(os.path.join(dd, "landmarks.npz"))
         rr = [json.loads(line) for line in open(os.path.join(dd, "metadata.jsonl"))]
