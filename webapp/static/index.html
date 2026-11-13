@@ -152,6 +152,7 @@
       <li>Esc キーでいつでも中止できます</li>
     </ul>
     <button class="btn primary lg" id="btnStartCalib">全画面で開始する →</button>
+    <button class="btn ghost" id="btnGameZero" hidden>キャリブなしでターゲットゲームを始める</button>
     <a class="link" href="#/guide">キャンセル</a>
   </div>
 </section>
@@ -179,7 +180,29 @@
       <p class="note">平均誤差は、9点のうち1点を除いて学習し、除いた点を予測したときのずれの平均です（leave-one-point-out）。</p>
     </div>
     <div class="actions two"><a class="btn ghost" href="#/ready">再キャリブレーション</a><a class="btn primary" href="#/measure">計測を開始 →</a></div>
+    <div class="actions"><button class="btn ghost" id="btnGameDone">◎ ターゲットゲームで試す</button></div>
   </div>
+</section>
+
+<!-- ターゲットゲーム：画面のどこかに出るターゲットを見つめると消え、次が出る（時間切れなし） -->
+<section class="game" id="page-game" hidden>
+  <div class="game-hud">
+    <div><small>消した数</small><strong id="gameCount">0</strong></div>
+    <div><small>平均時間</small><strong id="gameAvg">–</strong></div>
+  </div>
+  <div class="game-info" id="gameInfo"></div>
+  <div class="game-target" id="gameTarget">
+    <svg viewBox="-110 -110 220 220" aria-hidden="true">
+      <defs><linearGradient id="gameGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b2bff"/><stop offset="1" stop-color="#2f6bff"/></linearGradient></defs>
+      <circle class="zone" r="100"/>
+      <circle class="charge" id="gameCharge" r="100" transform="rotate(-90)"/>
+      <circle class="ring" r="34"/>
+      <circle class="core" r="14"/>
+    </svg>
+  </div>
+  <div class="game-burst" id="gameBurst"></div>
+  <div class="game-dot" id="gameDot" hidden></div>
+  <div class="game-msg" id="gameMsg">ターゲットを見つめると消えます（Esc で終了）</div>
 </section>
 
 <!-- ⑦ リアルタイム計測 -->
@@ -187,18 +210,19 @@
   <div class="stage" id="stage">
     <!-- 計測対象のサンプルページ（data-area がエリア分析の単位） -->
     <div class="demo" id="demo">
-      <div class="demo-nav" data-area="ナビゲーション"><b>Sample Expo 2026</b><span>概要</span><span>応募方法</span><span>審査</span><span>FAQ</span></div>
+      <!-- 文言は https://events.nikkeibp.co.jp/xtechnext/2026tky/ailaward/ に書かれている事実だけ（視線計測用のサンプル） -->
+      <div class="demo-nav" data-area="ナビゲーション"><b>学生AIリーダーズ大賞</b><span>概要</span><span>審査基準</span><span>最終審査</span><span>賞</span></div>
       <div class="demo-visual" data-area="メインビジュアル">
-        <small>アイデアで、未来をもっと良くする！</small>
-        <h3>学生アイデア<br>コンテスト 2026</h3>
-        <p class="prize">最優秀賞 <b>50</b>万円</p>
+        <small>大学院・大学・高等専門学校に在籍する学生が対象</small>
+        <h3>学生AIリーダーズ<br>大賞</h3>
+        <p class="prize">最優秀賞 <b>50</b>万円　／　優秀賞 <b>20</b>万円</p>
       </div>
       <div class="demo-text" data-area="説明文エリア">
-        <p>あなたのアイデアを、みんなに伝えよう。テーマは自由。個人・チームどちらでも応募できます。</p>
-        <p>応募締切：2026年12月20日　／　結果発表：2027年2月</p>
+        <p>審査基準：AI活用の独創性・適切性／社会に与えるインパクト／研究や学習への貢献、質の向上／AI活用に対する「批判的理解度」／プレゼンテーション力</p>
+        <p>主催：日経BP・日経クロステック　／　利用したAIツール、モデル、データは必ず明記</p>
       </div>
       <div class="demo-cta" data-area="エントリーボタン">
-        <span class="cta1">エントリーはこちら ▶</span><span class="cta2">エントリーシートダウンロード ↓</span>
+        <span class="cta1">審査基準を見る ▶</span><span class="cta2">最終審査：東京国際フォーラム</span>
       </div>
     </div>
     <canvas id="trail"></canvas>
@@ -262,5 +286,6 @@
 
 </main>
 <script src="app.js"></script>
+<script src="rec.js"></script>
 </body>
 </html>

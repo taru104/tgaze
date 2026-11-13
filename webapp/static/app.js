@@ -8,7 +8,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // キャリブレーションの9点（中央から開始し、外周を時計回り）。tgaze.NINE_POINTS と同じ位置。
 const CALIB_POINTS = [[0.5, 0.5], [0.1, 0.1], [0.5, 0.1], [0.9, 0.1], [0.9, 0.5], [0.9, 0.9], [0.5, 0.9], [0.1, 0.9], [0.1, 0.5]];
-const SETTLE_MS = 800;          // 点が移動してから視線が追いつくまで待つ時間
+const SETTLE_MS = 1300;         // 点が移動してから視線が追いつくまで待つ時間（0.8 → 1.8 → 1.3 秒）
 const SAMPLES_PER_POINT = 12;   // 1点で集めるフレーム数（tgaze.GazeTracker.calibrate と同じ）
 const POINT_TIMEOUT_MS = 4000;  // 顔が取れなくてもこの時間で次の点へ
 const VIEW_DIST_CM = 60;        // 誤差を角度に換算するときの想定距離
@@ -18,7 +18,17 @@ const AREA_COLORS = { "メインビジュアル": "#2f6bff", "エントリーボ
   "ナビゲーション": "#3c4d78", "その他": "#c34bd6" };
 const STORE_KEY = "tgaze.sessions.v1";
 
-const state = { stream: null, calib: null, calibrated: false };
+const state = { stream: null, calib: null, calibrated: false, info: { model: "", capture: [640, 480] } };
+
+// サーバが使うモデルと、撮る解像度（M8 系は 1920x1080）を聞いて、画面の隅にモデル名を出す
+const infoReady = fetch("/api/info").then((r) => r.json()).then((i) => {
+  state.info = i;
+  const tag = document.createElement("div");
+  tag.textContent = "モデル: " + i.model;
+  Object.assign(tag.style, { position: "fixed", right: "8px", bottom: "6px", zIndex: 9999, font: "11px sans-serif",
+    color: "#888", background: "rgba(255,255,255,.6)", padding: "1px 6px", borderRadius: "4px", pointerEvents: "none" });
+  document.body.appendChild(tag);
+}).catch(() => {});
 
 // ── サーバとの通信 ─────────────────────────────
 async function post(path, body) {
@@ -28,7 +38,8 @@ async function post(path, body) {
 const grabCanvas = document.createElement("canvas");
 function grab() {
   const v = $("#video");
-  const w = 640, h = Math.round(640 * (v.videoHeight || 480) / (v.videoWidth || 640));
+  const cw = state.info.capture[0], ch = state.info.capture[1];
+  const w = cw, h = Math.round(cw * (v.videoHeight || ch) / (v.videoWidth || cw));
   grabCanvas.width = w; grabCanvas.height = h;
   grabCanvas.getContext("2d").drawImage(v, 0, 0, w, h);
   return new Promise((res) => grabCanvas.toBlob(res, "image/jpeg", 0.85));
@@ -54,7 +65,9 @@ const stopLoop = () => { loopId++; };
 async function ensureCamera() {
   if (state.stream) return true;
   try {
-    state.stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
+    await infoReady;
+    const [cw, ch] = state.info.capture;
+    state.stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: cw }, height: { ideal: ch } }, audio: false });
     $("#video").srcObject = state.stream;
     await $("#video").play();
     return true;
@@ -73,13 +86,13 @@ function chrome() {
   return { left: side, top: Math.max(0, window.outerHeight - window.innerHeight - side) };
 }
 function screenToClient(gx, gy) {
-  if (isFs()) return [gx * innerWidth, gy * innerHeight];
+  if (isFs()) return [gx * screen.width, gy * screen.height - (screen.height - innerHeight)];
   const c = chrome();
   return [gx * screen.width - (window.screenX - (screen.left || 0)) - c.left,
           gy * screen.height - (window.screenY - (screen.top || 0)) - c.top];
 }
 function clientToScreen(cx, cy) {
-  if (isFs()) return [cx / innerWidth, cy / innerHeight];
+  if (isFs()) return [cx / screen.width, (cy + screen.height - innerHeight) / screen.height];
   const c = chrome();
   return [(cx + window.screenX - (screen.left || 0) + c.left) / screen.width,
           (cy + window.screenY - (screen.top || 0) + c.top) / screen.height];
@@ -88,7 +101,7 @@ async function enterFs() { try { if (!isFs()) await document.documentElement.req
 async function exitFs() { try { if (isFs()) await document.exitFullscreen(); } catch (e) { /* noop */ } }
 
 // ── ルーティング ─────────────────────────────
-const PAGES = ["home", "check", "guide", "ready", "calib", "done", "measure", "results"];
+const PAGES = ["home", "check", "guide", "ready", "calib", "done", "measure", "results", "game"];
 const STEP_OF = { check: 1, guide: 2, ready: 3, calib: 3, done: 4 };
 let current = null;
 
@@ -99,7 +112,7 @@ function route() {
   current = page;
   PAGES.forEach((p) => { $("#page-" + p).hidden = p !== page; });
   const step = STEP_OF[page];
-  $("#topbar").hidden = page === "calib";
+  $("#topbar").hidden = page === "calib" || page === "game";
   $("#steps").hidden = !step;
   $$("#steps li").forEach((li) => {
     const s = +li.dataset.step;
@@ -208,6 +221,7 @@ document.addEventListener("fullscreenchange", () => {
   }
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && current === "calib") { calibAbort = true; location.hash = "#/guide"; } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && current === "game") location.hash = state.calibrated ? "#/done" : "#/ready"; });
 
 // ── ⑥ 完了 ─────────────────────────────
 ENTER.done = () => {
@@ -479,6 +493,79 @@ $("#btnCsv").addEventListener("click", () => {
   a.href = URL.createObjectURL(new Blob(["﻿" + rows.join("\n")], { type: "text/csv" }));   // BOM 付き（Excel で文字化けしない）
   a.download = `tgaze_${s.date.replace(/[:.]/g, "-")}.csv`; a.click();
 });
+
+// ── ターゲットゲーム ─────────────────────────────
+// 画面のどこかにターゲットが出る → 当たりの輪の中を GAME_DWELL_MS 見つめ続けると弾けて消え、離れた場所に次が出る。時間切れはない。
+// 当たりの輪は今の精度（平均誤差 約3 cm）に合わせた半径。輪の中にいる間は外周のゲージがたまり、外れると少しずつ減る。
+const GAME_HIT_CM = 3.5, GAME_DWELL_MS = 500, GAME_POP_MS = 380;
+const game = { count: 0, times: [], prog: 0, last: 0, spawnAt: 0, popping: false, pos: null, timers: [] };
+const gameR = () => GAME_HIT_CM * screen.width / screenCm()[0];   // 当たりの半径（px。画面の幅と実寸から）
+
+async function startGame() { await enterFs(); location.hash = "#/game"; }
+$("#btnGameZero").addEventListener("click", startGame);
+$("#btnGameDone").addEventListener("click", startGame);
+infoReady.then(() => { $("#btnGameZero").hidden = !state.info.zero_shot; });
+
+function gameSpawn() {
+  const R = gameR(), W = innerWidth, H = innerHeight, mx = R + 30, y0 = R + 90, y1 = H * 0.88 - R;
+  const far = 0.4 * Math.hypot(W, H);
+  let best = null, bestD = -1;
+  for (let i = 0; i < 60; i++) {              // 前のターゲットから十分離れた場所を選ぶ（無理なら一番遠い候補）
+    const p = [mx + Math.random() * (W - 2 * mx), y0 + Math.random() * Math.max(1, y1 - y0)];
+    const d = game.pos ? Math.hypot(p[0] - game.pos[0], p[1] - game.pos[1]) : Infinity;
+    if (d >= far) { best = p; break; }
+    if (d > bestD) { best = p; bestD = d; }
+  }
+  game.pos = best; game.prog = 0; game.spawnAt = performance.now();
+  const t = $("#gameTarget"), size = 2.2 * R;
+  Object.assign(t.style, { width: size + "px", height: size + "px", left: best[0] - size / 2 + "px", top: best[1] - size / 2 + "px" });
+  $("#gameCharge").style.strokeDashoffset = 628.3;
+  t.classList.remove("pop", "spawn"); void t.offsetWidth; t.classList.add("spawn");
+}
+
+function gamePop() {
+  game.popping = true;
+  game.count++; game.times.push((performance.now() - game.spawnAt) / 1000);
+  $("#gameCount").textContent = game.count;
+  $("#gameAvg").textContent = (game.times.reduce((a, b) => a + b, 0) / game.times.length).toFixed(1) + " 秒";
+  $("#gameTarget").classList.add("pop");
+  const burst = $("#gameBurst"), [x, y] = game.pos, R = gameR();
+  for (let i = 0; i < 14; i++) {              // 光の粒が外に散る
+    const dot = document.createElement("i"), a = (i / 14) * 2 * Math.PI + Math.random() * 0.3, d = R * (0.9 + Math.random() * 0.6);
+    Object.assign(dot.style, { left: x + "px", top: y + "px" });
+    burst.appendChild(dot);
+    requestAnimationFrame(() => { dot.style.transform = `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px) scale(.3)`; dot.style.opacity = 0; });
+    game.timers.push(setTimeout(() => dot.remove(), 650));
+  }
+  game.timers.push(setTimeout(() => { gameSpawn(); game.popping = false; }, GAME_POP_MS));
+}
+
+ENTER.game = async () => {
+  if (!(await ensureCamera())) { location.hash = "#/check"; return; }
+  await sleep(300);                          // 全画面への切り替えが落ち着くまで
+  Object.assign(game, { count: 0, times: [], prog: 0, last: performance.now(), popping: false, pos: null });
+  $("#gameCount").textContent = "0"; $("#gameAvg").textContent = "–";
+  gameSpawn();
+  startLoop((r) => {
+    const now = performance.now(), dt = Math.min(200, now - game.last); game.last = now;
+    $("#gameInfo").innerHTML = `モデル: ${r.model || state.info.model}<br>${r.calibrated ? "キャリブ済み" : "キャリブなし"}　/　当たりの範囲: 半径 ${GAME_HIT_CM} cm`;
+    const dotEl = $("#gameDot");
+    if (!r.gaze) {
+      dotEl.hidden = true; game.prog = Math.max(0, game.prog - 2 * dt);
+      $("#gameMsg").textContent = !r.face ? "顔が見つかりません。カメラの正面を向いてください" : "先にキャリブレーションをしてください（Esc で戻る）";
+      return;
+    }
+    $("#gameMsg").textContent = "ターゲットを見つめると消えます（Esc で終了）";
+    const [cx, cy] = screenToClient(r.gaze[0], r.gaze[1]);
+    dotEl.hidden = false; Object.assign(dotEl.style, { left: cx + "px", top: cy + "px" });
+    if (game.popping || !game.pos) return;
+    const inside = Math.hypot(cx - game.pos[0], cy - game.pos[1]) <= gameR();
+    game.prog = inside ? game.prog + dt : Math.max(0, game.prog - 2 * dt);
+    $("#gameCharge").style.strokeDashoffset = 628.3 * (1 - Math.min(1, game.prog / GAME_DWELL_MS));
+    if (game.prog >= GAME_DWELL_MS) gamePop();
+  });
+};
+LEAVE.game = () => { stopLoop(); game.timers.forEach(clearTimeout); game.timers = []; $("#gameBurst").innerHTML = ""; exitFs(); };
 
 window.addEventListener("hashchange", route);
 route();

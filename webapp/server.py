@@ -5,6 +5,7 @@
 
     python webapp/server.py            # → http://localhost:8000
     python webapp/server.py --port 8080
+    python webapp/server.py --model models_alt/m8_phase8_1234   # M8 系モデル（webapp/m8_backend.py、撮影キットの部品を使う）
 
 API（すべて POST・本文は JPEG）
     /api/frame                 1フレーム推定。顔チェック（カメラ確認ページ用）と視線点を返す
@@ -12,11 +13,17 @@ API（すべて POST・本文は JPEG）
     /api/calib/sample?x=&y=    「このフレームで画面の (x, y) を見ていた」（x, y は [0,1]）
     /api/calib/fit             集めたサンプルで学習し、leave-one-point-out 誤差を返す（本文なし）
     /api/click?x=&y=           クリック位置を正解として逐次補正（tracker.record_click）
+    /api/rec/start             録画を始める（本文は JSON のメタ情報）。recordings/<日時>/ を作り、その名前を返す
+    /api/rec/chunk?sid=&kind=&ext=   録画の断片を追記（kind = face | screen、ext = mp4 | webm）
+    /api/rec/meta?sid=         録画のメタ情報（開始・停止の時刻など、JSON）を追記
+録画はこの PC の webapp/recordings/ にだけ保存する（顔が写るので git にも入れない）。
 """
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
+import re
 import mimetypes
 import sys
 import threading
@@ -29,9 +36,11 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from tgaze import GazeTracker  # noqa: E402
+# tgaze は App（関数版）を使うときだけ読み込む。M8 系（m8_backend）は撮影キット側の tgaze の部品（実測 K 対応の rich16d）を使うため
 
 STATIC = Path(__file__).resolve().parent / "static"
+REC_DIR = Path(__file__).resolve().parent / "recordings"
+_SID = re.compile(r"^\d{8}_\d{6}$")
 
 # 顔チェックのしきい値（カメラ確認ページの4項目）
 FACE_MARGIN = 0.02        # 顔の外接矩形が画像の端からこれ以上離れていれば「顔全体が映っている」
@@ -46,6 +55,7 @@ class App:
 
     def __init__(self):
         self.lock = threading.Lock()
+        from tgaze import GazeTracker
         self.tracker = GazeTracker(appearance=True, video=True)
         self.point_counts: dict[tuple[float, float], int] = {}
 
@@ -63,6 +73,9 @@ class App:
             if gaze is not None and self.tracker.is_calibrated:
                 out["gaze"] = [float(gaze[0]), float(gaze[1])]
             return out
+
+    def info(self) -> dict:
+        return {"model": "tgaze（関数版：16D+目パッチPCA16、Huber）", "capture": [640, 480], "zero_shot": False}
 
     def calib_reset(self) -> dict:
         with self.lock:
@@ -134,6 +147,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        if path == "/api/info":
+            return self._json(self.app.info())
         f = (STATIC / ("index.html" if path in ("", "/") else path.lstrip("/"))).resolve()
         if STATIC not in f.parents or not f.is_file():
             self.send_error(404)
@@ -147,8 +162,40 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _body(self) -> bytes:
+        n = int(self.headers.get("Content-Length", 0))
+        return self.rfile.read(n) if n else b""
+
+    def _rec(self, u):
+        """録画の受け取り（顔のカメラ映像と画面）。保存先は REC_DIR/<sid>/ だけ。"""
+        q = {k: v[0] for k, v in parse_qs(u.query).items()}
+        if u.path == "/api/rec/start":
+            sid = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+            d = REC_DIR / sid
+            d.mkdir(parents=True, exist_ok=True)
+            (d / "meta.jsonl").write_bytes(self._body() + b"\n")
+            return self._json({"ok": True, "sid": sid, "dir": str(d)})
+        sid = q.get("sid", "")
+        if not _SID.match(sid) or not (REC_DIR / sid).is_dir():
+            return self._json({"ok": False, "error": "bad sid"}, 400)
+        d = REC_DIR / sid
+        if u.path == "/api/rec/chunk":
+            kind, ext = q.get("kind"), q.get("ext")
+            if kind not in ("face", "screen") or ext not in ("mp4", "webm"):
+                return self._json({"ok": False, "error": "bad kind/ext"}, 400)
+            with open(d / f"{kind}.{ext}", "ab") as f:
+                f.write(self._body())
+            return self._json({"ok": True})
+        if u.path == "/api/rec/meta":
+            with open(d / "meta.jsonl", "ab") as f:
+                f.write(self._body() + b"\n")
+            return self._json({"ok": True})
+        self.send_error(404)
+
     def do_POST(self):
         u = urlparse(self.path)
+        if u.path.startswith("/api/rec/"):
+            return self._rec(u)
         q = {k: float(v[0]) for k, v in parse_qs(u.query).items()}
         try:
             if u.path == "/api/frame":
@@ -172,8 +219,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8000)
     ap.add_argument("--host", default="127.0.0.1", help="既定はこのPCからのみ接続可")
+    ap.add_argument("--model", default=None,
+                    help="M8 系モデル: 撮影キットからの相対パス（例 models_alt/m8_phase8_1234）か frozen（本番 M8）。省略時は tgaze 関数版")
+    ap.add_argument("--kit", default="~/tgaze/experiments/phase6_kit", help="撮影キット（experiments/phase6_kit）の場所")
     args = ap.parse_args()
-    Handler.app = App()
+    if args.model:
+        from m8_backend import M8App
+        kit = str(Path(args.kit).expanduser())
+        model = args.model if args.model == "frozen" or Path(args.model).is_absolute() else str(Path(kit) / args.model)
+        Handler.app = M8App(model, kit)
+        print(f"model: {Handler.app.name}")
+    else:
+        Handler.app = App()
     srv = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"Tgaze web app: http://localhost:{args.port}  (Ctrl+C で終了)", flush=True)
     try:

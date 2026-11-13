@@ -48,3 +48,6 @@ Thumbs.db
 *.egg-info/
 build/
 dist/
+
+# Web アプリの録画（顔が写るので公開しない）
+webapp/recordings/

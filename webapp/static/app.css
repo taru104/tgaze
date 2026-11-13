@@ -239,3 +239,33 @@ body.fs .panel:hover { opacity: 1; }
   .tab { display: none !important; }
   .tab[data-tab="report"] { display: block !important; }
 }
+
+/* 計測画面のサンプルページは薄くして、視線の点を目立たせる */
+.demo { opacity: .28; }
+
+/* ── ターゲットゲーム ───────────────────────── */
+.game { position: fixed; inset: 0; z-index: 50; cursor: none; overflow: hidden;
+  background: radial-gradient(1200px 700px at 50% 45%, #ffffff 0%, #f3f5fd 60%, #e9edfa 100%); }
+.game-hud { position: absolute; top: 22px; left: 28px; display: flex; gap: 14px; }
+.game-hud div { background: rgba(255, 255, 255, .85); border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px;
+  box-shadow: 0 4px 16px rgba(19, 25, 74, .06); min-width: 92px; }
+.game-hud small { display: block; font-size: 11px; color: var(--sub); }
+.game-hud strong { font-size: 24px; color: var(--ink); font-weight: 800; }
+.game-info { position: absolute; top: 26px; right: 28px; font-size: 12px; color: var(--sub); text-align: right; line-height: 1.6; }
+.game-msg { position: absolute; bottom: 26px; width: 100%; text-align: center; font-size: 14px; color: var(--sub); }
+.game-target { position: absolute; left: 0; top: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; }
+.game-target svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.game-target .zone { fill: rgba(106, 44, 255, .05); stroke: rgba(106, 44, 255, .28); stroke-width: 1.5; stroke-dasharray: 4 6; }
+.game-target .charge { fill: none; stroke: url(#gameGrad); stroke-width: 6; stroke-linecap: round;
+  stroke-dasharray: 628.3; stroke-dashoffset: 628.3; transition: stroke-dashoffset .08s linear; }
+.game-target .ring { fill: none; stroke: url(#gameGrad); stroke-width: 3; opacity: .55; animation: gamePulse 1.6s ease-in-out infinite; transform-origin: 0 0; }
+.game-target .core { fill: url(#gameGrad); filter: drop-shadow(0 0 10px rgba(91, 43, 255, .55)); }
+.game-target.spawn { animation: gameSpawn .35s cubic-bezier(.2, 1.4, .4, 1); }
+.game-target.pop { opacity: 0; transform: scale(1.35); }
+@keyframes gamePulse { 0%, 100% { transform: scale(1); opacity: .55; } 50% { transform: scale(1.18); opacity: .25; } }
+@keyframes gameSpawn { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.game-burst { position: absolute; left: 0; top: 0; pointer-events: none; }
+.game-burst i { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--grad);
+  transition: transform .5s cubic-bezier(.1, .8, .3, 1), opacity .5s ease; }
+.game-dot { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; pointer-events: none;
+  background: rgba(47, 107, 255, .35); box-shadow: 0 0 0 2px rgba(255, 255, 255, .8); transition: left .05s linear, top .05s linear; }
