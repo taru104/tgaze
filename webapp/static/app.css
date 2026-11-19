@@ -259,3 +259,30 @@ body.fs .panel:hover { opacity: 1; }
   transition: transform .5s cubic-bezier(.1, .8, .3, 1), opacity .5s ease; }
 .game-dot { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; pointer-events: none;
   background: rgba(47, 107, 255, .35); box-shadow: 0 0 0 2px rgba(255, 255, 255, .8); transition: left .05s linear, top .05s linear; }
+/* ── 視線キーボード ───────────────────────── */
+.kb { position: fixed; inset: 0; z-index: 50; cursor: none; overflow: hidden; display: flex; flex-direction: column;
+  padding: 22px 28px 56px; gap: 18px;
+  background: radial-gradient(1200px 700px at 50% 45%, #ffffff 0%, #f3f5fd 60%, #e9edfa 100%); }
+.kb[hidden] { display: none; }
+.kb-top { display: flex; gap: 18px; align-items: stretch; flex: 0 0 22%; min-height: 0; }
+.kb-out { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 20px;
+  font-size: 34px; font-weight: 700; line-height: 1.35; white-space: pre-wrap; word-break: break-all; overflow: hidden;
+  box-shadow: 0 4px 16px rgba(19, 25, 74, .06); }
+.kb-caret { display: inline-block; width: 3px; height: 1.1em; vertical-align: -.15em; margin-left: 2px; background: var(--violet);
+  animation: kbBlink 1s steps(1) infinite; }
+@keyframes kbBlink { 50% { opacity: 0; } }
+.kb-info { position: static; align-self: flex-start; }
+.kb-keys { flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.kb-row { flex: 1; display: flex; gap: 12px; }
+.kb-row:nth-child(2) { padding: 0 3.5%; }
+.kb-row:nth-child(3) { padding: 0 0 0 7%; }
+.kb-key { --p: 0; flex: 1 1 0; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  background: #fff; border: 1px solid var(--line); border-radius: 14px; font-size: 30px; font-weight: 800; color: var(--ink);
+  box-shadow: 0 3px 10px rgba(19, 25, 74, .06); user-select: none; }
+.kb-key::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--p) * 100%);
+  background: linear-gradient(0deg, rgba(91, 43, 255, .28), rgba(47, 107, 255, .18)); pointer-events: none; }
+.kb-key.look { border-color: rgba(106, 44, 255, .55); }
+.kb-key.hit { animation: kbHit .35s ease; }
+@keyframes kbHit { 0% { background: #6a2cff; color: #fff; transform: scale(.96); } 100% { background: #fff; transform: scale(1); } }
+.kb-msg { bottom: 18px; left: 0; }
+.kb .game-dot { z-index: 2; }

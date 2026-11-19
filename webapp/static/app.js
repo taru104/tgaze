@@ -101,7 +101,7 @@ async function enterFs() { try { if (!isFs()) await document.documentElement.req
 async function exitFs() { try { if (isFs()) await document.exitFullscreen(); } catch (e) { /* noop */ } }
 
 // ── ルーティング ─────────────────────────────
-const PAGES = ["home", "check", "guide", "ready", "calib", "done", "measure", "results", "game"];
+const PAGES = ["home", "check", "guide", "ready", "calib", "done", "measure", "results", "game", "kb"];
 const STEP_OF = { check: 1, guide: 2, ready: 3, calib: 3, done: 4 };
 let current = null;
 
@@ -112,7 +112,7 @@ function route() {
   current = page;
   PAGES.forEach((p) => { $("#page-" + p).hidden = p !== page; });
   const step = STEP_OF[page];
-  $("#topbar").hidden = page === "calib" || page === "game";
+  $("#topbar").hidden = page === "calib" || page === "game" || page === "kb";
   $("#steps").hidden = !step;
   $$("#steps li").forEach((li) => {
     const s = +li.dataset.step;
@@ -221,7 +221,7 @@ document.addEventListener("fullscreenchange", () => {
   }
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && current === "calib") { calibAbort = true; location.hash = "#/guide"; } });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && current === "game") location.hash = state.calibrated ? "#/done" : "#/ready"; });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (current === "game" || current === "kb")) location.hash = state.calibrated ? "#/done" : "#/ready"; });
 
 // ── ⑥ 完了 ─────────────────────────────
 ENTER.done = () => {
@@ -566,6 +566,84 @@ ENTER.game = async () => {
   });
 };
 LEAVE.game = () => { stopLoop(); game.timers.forEach(clearTimeout); game.timers = []; $("#gameBurst").innerHTML = ""; exitFs(); };
+
+// ── 視線キーボード ─────────────────────────────
+// QWERTY 配列。視線点の下にあるキーに時間がたまり、KB_DWELL_MS に達したら入力。
+// 視線のぶれでとなりのキーに一瞬出ても、たまった時間は 0 に戻さず少しずつ減らす（減る速さは KB_DECAY 倍）。
+const KB_DWELL_MS = 1000, KB_DECAY = 1.5, KB_REFRACT_MS = 400, KB_SMOOTH = 0.5;
+const KB_ROWS = [
+  "QWERTYUIOP".split(""),
+  "ASDFGHJKL".split(""),
+  "ZXCVBNM".split("").concat([{ k: "BS", label: "⌫", w: 1.5 }]),
+  [{ k: "CLEAR", label: "クリア", w: 2 }, { k: " ", label: "スペース", w: 5 }, { k: "ENTER", label: "改行", w: 2 }],
+];
+const kb = { text: "", acc: new Map(), last: 0, lockUntil: 0, sx: null, sy: null };
+
+function kbBuild() {
+  const box = $("#kbKeys"); box.innerHTML = "";
+  KB_ROWS.forEach((row) => {
+    const r = document.createElement("div"); r.className = "kb-row";
+    row.forEach((c) => {
+      const o = typeof c === "string" ? { k: c, label: c, w: 1 } : c;
+      const b = document.createElement("div");
+      b.className = "kb-key"; b.dataset.k = o.k; b.textContent = o.label; b.style.flexGrow = o.w;
+      r.appendChild(b);
+    });
+    box.appendChild(r);
+  });
+}
+function kbRender() { $("#kbText").textContent = kb.text; const o = $("#kbOut"); o.scrollTop = o.scrollHeight; }
+function kbPress(el) {
+  const k = el.dataset.k;
+  if (k === "BS") kb.text = kb.text.slice(0, -1);
+  else if (k === "CLEAR") kb.text = "";
+  else if (k === "ENTER") kb.text += "\n";
+  else kb.text += k;
+  kbRender();
+  el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit");
+  kb.acc.clear(); $$("#kbKeys .kb-key").forEach((e) => e.style.setProperty("--p", 0));
+  kb.lockUntil = performance.now() + KB_REFRACT_MS;     // 入力直後は少し休む（同じキーの連打を防ぐ）
+}
+async function startKb() { await enterFs(); location.hash = "#/kb"; }
+$("#btnKbZero").addEventListener("click", startKb);
+$("#btnKbDone").addEventListener("click", startKb);
+infoReady.then(() => { $("#btnKbZero").hidden = !state.info.zero_shot; });
+
+ENTER.kb = async () => {
+  kbBuild();
+  if (!(await ensureCamera())) { location.hash = "#/check"; return; }
+  await sleep(300);                          // 全画面への切り替えが落ち着くまで
+  Object.assign(kb, { text: "", last: performance.now(), lockUntil: 0, sx: null, sy: null }); kb.acc.clear();
+  kbRender();
+  startLoop((r) => {
+    const now = performance.now(), dt = Math.min(200, now - kb.last); kb.last = now;
+    $("#kbInfo").innerHTML = `モデル: ${r.model || state.info.model}<br>${r.calibrated ? "キャリブ済み" : "キャリブなし"}　/　入力までの時間: ${(KB_DWELL_MS / 1000).toFixed(1)} 秒`;
+    const dotEl = $("#kbDot");
+    let hot = null;
+    if (!r.gaze) {
+      dotEl.hidden = true; kb.sx = kb.sy = null;
+      $("#kbMsg").textContent = !r.face ? "顔が見つかりません。カメラの正面を向いてください" : "先にキャリブレーションをしてください（Esc で戻る）";
+    } else {
+      $("#kbMsg").textContent = "キーを約1秒見つめると入力されます（Esc で終了）";
+      const [cx, cy] = screenToClient(r.gaze[0], r.gaze[1]);
+      kb.sx = kb.sx == null ? cx : kb.sx + KB_SMOOTH * (cx - kb.sx);     // 軽くなめらかにする
+      kb.sy = kb.sy == null ? cy : kb.sy + KB_SMOOTH * (cy - kb.sy);
+      dotEl.hidden = false; Object.assign(dotEl.style, { left: kb.sx + "px", top: kb.sy + "px" });
+      const el = document.elementFromPoint(kb.sx, kb.sy);
+      hot = el && el.closest("#kbKeys .kb-key");
+    }
+    if (now < kb.lockUntil) hot = null;
+    $$("#kbKeys .kb-key").forEach((e) => {
+      let a = kb.acc.get(e) || 0;
+      a = e === hot ? a + dt : Math.max(0, a - KB_DECAY * dt);
+      kb.acc.set(e, a);
+      e.style.setProperty("--p", Math.min(1, a / KB_DWELL_MS));
+      e.classList.toggle("look", e === hot);
+    });
+    if (hot && kb.acc.get(hot) >= KB_DWELL_MS) kbPress(hot);
+  });
+};
+LEAVE.kb = () => { stopLoop(); exitFs(); };
 
 window.addEventListener("hashchange", route);
 route();
