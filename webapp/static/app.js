@@ -101,7 +101,7 @@ async function enterFs() { try { if (!isFs()) await document.documentElement.req
 async function exitFs() { try { if (isFs()) await document.exitFullscreen(); } catch (e) { /* noop */ } }
 
 // ── ルーティング ─────────────────────────────
-const PAGES = ["home", "check", "guide", "ready", "calib", "done", "measure", "results", "game"];
+const PAGES = ["home", "check", "guide", "ready", "calib", "done", "measure", "results", "game", "keyboard"];
 const STEP_OF = { check: 1, guide: 2, ready: 3, calib: 3, done: 4 };
 let current = null;
 
@@ -112,7 +112,7 @@ function route() {
   current = page;
   PAGES.forEach((p) => { $("#page-" + p).hidden = p !== page; });
   const step = STEP_OF[page];
-  $("#topbar").hidden = page === "calib" || page === "game";
+  $("#topbar").hidden = page === "calib" || page === "game" || page === "keyboard";
   $("#steps").hidden = !step;
   $$("#steps li").forEach((li) => {
     const s = +li.dataset.step;
@@ -221,7 +221,7 @@ document.addEventListener("fullscreenchange", () => {
   }
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && current === "calib") { calibAbort = true; location.hash = "#/guide"; } });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && current === "game") location.hash = state.calibrated ? "#/done" : "#/ready"; });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (current === "game" || current === "keyboard")) location.hash = state.calibrated ? "#/done" : "#/ready"; });
 
 // ── ⑥ 完了 ─────────────────────────────
 ENTER.done = () => {
@@ -566,6 +566,78 @@ ENTER.game = async () => {
   });
 };
 LEAVE.game = () => { stopLoop(); game.timers.forEach(clearTimeout); game.timers = []; $("#gameBurst").innerHTML = ""; exitFs(); };
+
+// ── 視線キーボード ─────────────────────────────
+// 今の精度（平均誤差 約3 cm）でも押せるように、横4×縦3の大きなキーを2段階で選ぶ：
+//   1段目で行（あ・か・さ…）を選ぶ → 2段目でその行の文字を選ぶ → 入力されて1段目に戻る。
+// キーを KB_DWELL_MS 見つめると決定。決定の直後 KB_COOLDOWN_MS は次を受け付けない（同じ場所の新しいキーを続けて押さないため）。
+const KB_DWELL_MS = 800, KB_COOLDOWN_MS = 700;
+const KB_ROWS = [["あ", "あいうえお"], ["か", "かきくけこ"], ["さ", "さしすせそ"], ["た", "たちつてと"], ["な", "なにぬねの"], ["は", "はひふへほ"],
+                 ["ま", "まみむめも"], ["や", "やゆよ"], ["ら", "らりるれろ"], ["わ", "わをんー"]];
+const kb = { text: "", level: null, keys: [], hot: -1, prog: 0, last: 0, cool: 0 };
+
+async function startKeyboard() { await enterFs(); location.hash = "#/keyboard"; }
+$("#btnKbZero").addEventListener("click", startKeyboard);
+$("#btnKbDone").addEventListener("click", startKeyboard);
+infoReady.then(() => { $("#btnKbZero").hidden = !state.info.zero_shot; });
+
+function kbLayout() {
+  // keys: [{label, sub, cls, act}]（12個。足りない分は空き）
+  const keys = [];
+  if (kb.level === null) {
+    KB_ROWS.forEach(([head, chars], i) => keys.push({ label: head, sub: chars, act: () => { kb.level = i; } }));
+    keys.push({ label: "⌫", sub: "1文字消す", cls: "fn", act: () => { kb.text = [...kb.text].slice(0, -1).join(""); } });
+    keys.push({ label: "✕", sub: "全部消す", cls: "fn", act: () => { kb.text = ""; } });
+  } else {
+    [...KB_ROWS[kb.level][1]].forEach((ch) => keys.push({ label: ch, act: () => { kb.text += ch; kb.level = null; } }));
+    while (keys.length < 11) keys.push({ cls: "blank" });
+    keys.push({ label: "↩", sub: "戻る", cls: "fn", act: () => { kb.level = null; } });
+  }
+  while (keys.length < 12) keys.push({ cls: "blank" });
+  kb.keys = keys;
+  $("#kbGrid").innerHTML = keys.map((k) =>
+    `<div class="kb-key ${k.cls || ""}">${k.label || ""}${k.sub ? `<small>${k.sub}</small>` : ""}<i class="fill"></i></div>`).join("");
+  kb.hot = -1; kb.prog = 0;
+}
+function kbRenderText() {
+  $("#kbText").innerHTML = kb.text ? `${kb.text.replace(/[<>&]/g, "")}<span class="caret"></span>`
+    : `<span class="kb-placeholder">見つめて入力してみましょう</span>`;
+}
+
+ENTER.keyboard = async () => {
+  if (!(await ensureCamera())) { location.hash = "#/check"; return; }
+  await sleep(300);
+  Object.assign(kb, { level: null, hot: -1, prog: 0, last: performance.now(), cool: 0 });
+  kbLayout(); kbRenderText();
+  startLoop((r) => {
+    const now = performance.now(), dt = Math.min(200, now - kb.last); kb.last = now;
+    $("#kbInfo").innerHTML = `モデル: ${r.model || state.info.model}<br>${r.calibrated ? "キャリブ済み" : "キャリブなし"}　/　0.8秒見つめて決定`;
+    const dot = $("#kbDot");
+    if (!r.gaze) {
+      dot.hidden = true;
+      $("#kbMsg").textContent = !r.face ? "顔が見つかりません。カメラの正面を向いてください" : "先にキャリブレーションをしてください（Esc で戻る）";
+      return;
+    }
+    $("#kbMsg").textContent = "キーを見つめると選べます（Esc で終了）";
+    const [cx, cy] = screenToClient(r.gaze[0], r.gaze[1]);
+    dot.hidden = false; Object.assign(dot.style, { left: cx + "px", top: cy + "px" });
+    const els = $$("#kbGrid .kb-key");
+    let hot = els.findIndex((el, i) => { const b = el.getBoundingClientRect(); return kb.keys[i].act && cx >= b.left && cx <= b.right && cy >= b.top && cy <= b.bottom; });
+    if (now < kb.cool) hot = -1;
+    if (hot !== kb.hot) { if (kb.hot >= 0 && els[kb.hot]) { els[kb.hot].classList.remove("hot"); els[kb.hot].querySelector(".fill").style.width = "0"; } kb.hot = hot; kb.prog = 0; }
+    if (hot < 0) return;
+    els[hot].classList.add("hot");
+    kb.prog += dt;
+    els[hot].querySelector(".fill").style.width = Math.min(100, kb.prog / KB_DWELL_MS * 100) + "%";
+    if (kb.prog >= KB_DWELL_MS) {
+      kb.keys[hot].act();
+      kb.cool = now + KB_COOLDOWN_MS;
+      kbLayout(); kbRenderText();
+      const el = $$("#kbGrid .kb-key")[hot]; if (el) el.classList.add("done");
+    }
+  });
+};
+LEAVE.keyboard = () => { stopLoop(); exitFs(); };
 
 window.addEventListener("hashchange", route);
 route();

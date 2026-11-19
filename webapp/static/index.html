@@ -153,6 +153,7 @@
     </ul>
     <button class="btn primary lg" id="btnStartCalib">全画面で開始する →</button>
     <button class="btn ghost" id="btnGameZero" hidden>キャリブなしでターゲットゲームを始める</button>
+    <button class="btn ghost" id="btnKbZero" hidden>キャリブなしで視線キーボードを始める</button>
     <a class="link" href="#/guide">キャンセル</a>
   </div>
 </section>
@@ -180,7 +181,7 @@
       <p class="note">平均誤差は、9点のうち1点を除いて学習し、除いた点を予測したときのずれの平均です（leave-one-point-out）。</p>
     </div>
     <div class="actions two"><a class="btn ghost" href="#/ready">再キャリブレーション</a><a class="btn primary" href="#/measure">計測を開始 →</a></div>
-    <div class="actions"><button class="btn ghost" id="btnGameDone">◎ ターゲットゲームで試す</button></div>
+    <div class="actions"><button class="btn ghost" id="btnGameDone">◎ ターゲットゲームで試す</button><button class="btn ghost" id="btnKbDone">⌨ 視線キーボードで試す</button></div>
   </div>
 </section>
 
@@ -203,6 +204,17 @@
   <div class="game-burst" id="gameBurst"></div>
   <div class="game-dot" id="gameDot" hidden></div>
   <div class="game-msg" id="gameMsg">ターゲットを見つめると消えます（Esc で終了）</div>
+</section>
+
+<!-- 視線キーボード：大きなキーを見つめて文字を入力する（行を選ぶ → 文字を選ぶ の2段階） -->
+<section class="kb" id="page-keyboard" hidden>
+  <div class="kb-head">
+    <div class="kb-text" id="kbText"><span class="kb-placeholder">見つめて入力してみましょう</span></div>
+    <div class="kb-info" id="kbInfo"></div>
+  </div>
+  <div class="kb-grid" id="kbGrid"></div>
+  <div class="game-dot" id="kbDot" hidden></div>
+  <div class="kb-msg" id="kbMsg">キーを見つめると選べます（Esc で終了）</div>
 </section>
 
 <!-- ⑦ リアルタイム計測 -->

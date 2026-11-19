@@ -259,3 +259,25 @@ body.fs .panel:hover { opacity: 1; }
   transition: transform .5s cubic-bezier(.1, .8, .3, 1), opacity .5s ease; }
 .game-dot { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; pointer-events: none;
   background: rgba(47, 107, 255, .35); box-shadow: 0 0 0 2px rgba(255, 255, 255, .8); transition: left .05s linear, top .05s linear; }
+
+/* ── 視線キーボード ───────────────────────── */
+.kb { position: fixed; inset: 0; z-index: 50; cursor: none; overflow: hidden; display: flex; flex-direction: column;
+  background: radial-gradient(1200px 700px at 50% 45%, #ffffff 0%, #f3f5fd 60%, #e9edfa 100%); padding: 18px 28px 40px; box-sizing: border-box; gap: 16px; }
+.kb-head { display: flex; align-items: center; gap: 16px; }
+.kb-text { flex: 1; min-height: 64px; display: flex; align-items: center; padding: 6px 22px; background: #fff; border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: 0 4px 16px rgba(19, 25, 74, .06); font-size: 40px; font-weight: 800; color: var(--ink); letter-spacing: .04em; overflow: hidden; white-space: nowrap; }
+.kb-text .kb-placeholder { font-size: 18px; font-weight: 400; color: var(--sub); letter-spacing: 0; }
+.kb-text .caret { display: inline-block; width: 3px; height: 1em; background: var(--violet); margin-left: 4px; animation: kbBlink 1s steps(1) infinite; }
+@keyframes kbBlink { 50% { opacity: 0; } }
+.kb-info { font-size: 12px; color: var(--sub); text-align: right; line-height: 1.6; white-space: nowrap; }
+.kb-grid { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 16px; }
+.kb-key { position: relative; border-radius: 18px; background: #fff; border: 1.5px solid var(--line); display: grid; place-items: center;
+  font-size: 46px; font-weight: 800; color: var(--ink); overflow: hidden; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.kb-key small { position: absolute; bottom: 10px; font-size: 13px; font-weight: 500; color: var(--sub); }
+.kb-key.blank { background: transparent; border-color: transparent; }
+.kb-key.fn { color: var(--violet); font-size: 30px; }
+.kb-key.hot { border-color: var(--violet); box-shadow: 0 8px 24px rgba(106, 44, 255, .18); transform: scale(1.02); }
+.kb-key .fill { position: absolute; left: 0; bottom: 0; height: 6px; width: 0; background: var(--grad); }
+.kb-key.done { animation: kbDone .3s ease; }
+@keyframes kbDone { 0% { background: #efe8ff; } 100% { background: #fff; } }
+.kb-msg { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; font-size: 13px; color: var(--sub); }
