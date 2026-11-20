@@ -1,0 +1,6 @@
+{"time": "2026-10-12T00:13:55.964", "kind": "session_start", "session": "sanity", "session_id": "sanity_20261012T001355"}
+{"time": "2026-10-12T00:14:20.653", "kind": "session_complete", "session": "sanity", "session_id": "sanity_20261012T001355"}
+{"time": "2026-10-12T00:14:40.692", "kind": "session_start", "session": "calibration", "session_id": "calibration_20261012T001440"}
+{"time": "2026-10-12T00:15:29.083", "kind": "session_complete", "session": "calibration", "session_id": "calibration_20261012T001440"}
+{"time": "2026-10-12T00:16:38.769", "kind": "session_start", "session": "evaluation", "session_id": "evaluation_20261012T001638"}
+{"time": "2026-10-12T00:21:25.970", "kind": "session_complete", "session": "evaluation", "session_id": "evaluation_20261012T001638"}

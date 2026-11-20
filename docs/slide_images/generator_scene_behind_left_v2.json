@@ -1,0 +1,60 @@
+{
+ "image": "generator_scene_behind_left_v2.png",
+ "size_px": [
+  2400,
+  1300
+ ],
+ "origin": "top-left, x right, y down",
+ "camera_webcam_px": [
+  711.4,
+  860.4
+ ],
+ "gaze_point_px": [
+  672.2,
+  1068.0
+ ],
+ "eye_center_px": {
+  "left": [
+   1484.6,
+   264.5
+  ],
+  "right": [
+   1387.3,
+   251.5
+  ],
+  "cyclopean": [
+   1435.5,
+   257.9
+  ]
+ },
+ "scene": {
+  "generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3), v2 lighting, + clothes",
+  "identity": 247,
+  "appearance": {
+   "sex_for_appearance": "male",
+   "race_for_appearance": "asian",
+   "skin": "middleage_asian_male",
+   "hair": "short02",
+   "iris": "brownlight",
+   "eyebrows": "eyebrow012",
+   "eyelashes": "eyelashes03",
+   "eyelid": {
+    "upper_gain": 0.7166171168810691,
+    "lower_gain": 0.41627880400346307,
+    "upper_offset_deg": 0.48444682563116004
+   }
+  },
+  "clothes": "male_casualsuit01",
+  "gaze_target_uv": [
+   0.4,
+   -0.4
+  ],
+  "gaze_target_screen_xy_m": [
+   0.058120000000000005,
+   -0.0378
+  ],
+  "eye_to_screen_center_m": 0.6373313526188897,
+  "head_pose": "neutral",
+  "view": "behind-left of the laptop, above; lid and screen semi-transparent"
+ }
+}

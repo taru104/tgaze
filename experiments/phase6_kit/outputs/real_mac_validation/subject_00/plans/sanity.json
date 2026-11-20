@@ -1,0 +1,94 @@
+{
+ "session": "sanity",
+ "created": "2026-10-12T00:13:55",
+ "slots": [
+  {
+   "slot_id": "san_000",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.8,
+    0.0
+   ],
+   "name": "right",
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "san_001",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.8,
+    0.0
+   ],
+   "name": "left",
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "san_002",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.8,
+    0.0
+   ],
+   "name": "right",
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "san_003",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    -0.8
+   ],
+   "name": "down",
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "san_004",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.8
+   ],
+   "name": "up",
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "san_005",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.8,
+    0.0
+   ],
+   "name": "left",
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "san_006",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    -0.8
+   ],
+   "name": "down",
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "san_007",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.8
+   ],
+   "name": "up",
+   "visible_in_window": true
+  }
+ ]
+}

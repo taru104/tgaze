@@ -1,0 +1,130 @@
+{
+ "kit_m8_all120": {
+  "onnx_path": "/home/rtarutani/mpfb2-gaze-generator-poc/outputs/experiments/phase7/cpu_runtime/kit_m8_all120/kit_m8_all120.onnx",
+  "onnx_size_bytes": 87109,
+  "onnx_max_abs_diff_vs_torch": 5.960464477539063e-08,
+  "feature_max_abs_diff": 5.237742666253098e-07,
+  "ort_session_providers": [
+   "CPUExecutionProvider"
+  ],
+  "ort_available_providers": [
+   "AzureExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "torch_imported": false,
+  "CUDA_VISIBLE_DEVICES": "",
+  "this_process_on_gpu": false,
+  "cpu_affinity": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "ort_threads": 0,
+  "latency_ms": {
+   "total": {
+    "mean": 35.15360199691107,
+    "median": 35.25254299165681,
+    "p95": 37.18358372570947
+   },
+   "mediapipe": {
+    "mean": 31.16921734220038,
+    "median": 31.43128694500774,
+    "p95": 33.211984258377925
+   },
+   "features": {
+    "mean": 3.6978083433738598,
+    "median": 3.4986010286957026,
+    "p95": 4.168732633115724
+   },
+   "onnx": {
+    "mean": 0.1982328035713484,
+    "median": 0.19868346862494946,
+    "p95": 0.24500254658050835
+   }
+  },
+  "fps_mean": 28.446587069167748,
+  "fps_p95_frame": 26.89358850875313,
+  "cpu_percent_of_one_core": 229.64106717586048,
+  "rss_mb": 3007.3984375,
+  "frames": 300,
+  "pipeline_error_cm_on_these_frames": 1.9647305449436627,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz"
+ },
+ "kit_m8_eyepca16_all120": {
+  "onnx_path": "/home/rtarutani/mpfb2-gaze-generator-poc/outputs/experiments/phase7/cpu_runtime/kit_m8_eyepca16_all120/kit_m8_eyepca16_all120.onnx",
+  "onnx_size_bytes": 91342,
+  "onnx_max_abs_diff_vs_torch": 1.7881393432617188e-07,
+  "feature_max_abs_diff": 9.440556707485115e-07,
+  "ort_session_providers": [
+   "CPUExecutionProvider"
+  ],
+  "ort_available_providers": [
+   "AzureExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "torch_imported": false,
+  "CUDA_VISIBLE_DEVICES": "",
+  "this_process_on_gpu": false,
+  "cpu_affinity": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "ort_threads": 0,
+  "latency_ms": {
+   "total": {
+    "mean": 37.16648355902483,
+    "median": 38.00140449311584,
+    "p95": 41.60929808858782
+   },
+   "mediapipe": {
+    "mean": 29.860300044917192,
+    "median": 30.68436897592619,
+    "p95": 33.459282375406474
+   },
+   "features": {
+    "mean": 7.037594643576692,
+    "median": 6.997910561040044,
+    "p95": 7.996307767461987
+   },
+   "onnx": {
+    "mean": 0.18057764313804606,
+    "median": 0.1872789580374956,
+    "p95": 0.23774213623255494
+   }
+  },
+  "fps_mean": 26.905962153021015,
+  "fps_p95_frame": 24.033089860611465,
+  "cpu_percent_of_one_core": 438.17809598560586,
+  "rss_mb": 3038.6171875,
+  "frames": 300,
+  "pipeline_error_cm_on_these_frames": 1.1039447703650815,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz"
+ }
+}

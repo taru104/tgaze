@@ -51,3 +51,5 @@ dist/
 
 # Web アプリの録画（顔が写るので公開しない）
 webapp/recordings/
+# カメラキャリブの撮影画像(大容量)。結果JSONとボード画像だけ公開
+results/camera_calib/*/img_*.png

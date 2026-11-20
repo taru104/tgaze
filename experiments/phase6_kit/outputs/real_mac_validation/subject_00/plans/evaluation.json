@@ -1,0 +1,756 @@
+{
+ "session": "evaluation",
+ "created": "2026-10-12T00:16:38",
+ "slots": [
+  {
+   "slot_id": "ev_b0_000",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.4,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_001",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.8,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_002",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.4,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_003",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.4,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_004",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.8,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_005",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.4,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_006",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.8,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_007",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.8,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_008",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.8,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_009",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_010",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.4,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_011",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.4,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_012",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.4,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_013",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.4,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_014",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_015",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_016",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.8,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_017",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.4,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_018",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.8,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_019",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_020",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.0,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_021",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.8,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_022",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.8,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_023",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    0.8,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b0_024",
+   "block": 0,
+   "cond": "NATURAL",
+   "uv": [
+    -0.4,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_000",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.8,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_001",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.4,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_002",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.4,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_003",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.4,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_004",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.8,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_005",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.8,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_006",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.8,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_007",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.8,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_008",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.4,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_009",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.4,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_010",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.0,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_011",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.0,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_012",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.8,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_013",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.4,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_014",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.0,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_015",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.8,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_016",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.4,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_017",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.4,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_018",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.8,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_019",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.0,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_020",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.8,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_021",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    -0.8,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_022",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.0,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_023",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.4,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b1_024",
+   "block": 1,
+   "cond": "EYE_DOMINANT",
+   "uv": [
+    0.4,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_000",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.4,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_001",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.4,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_002",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.8,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_003",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.4,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_004",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.4,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_005",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.4,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_006",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.8,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_007",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.4,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_008",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.8,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_009",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.8,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_010",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.0,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_011",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.4,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_012",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.8,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_013",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.0,
+    0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_014",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.0,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_015",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.8,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_016",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.8,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_017",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.8,
+    0.0
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_018",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.4,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_019",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.8,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_020",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.4,
+    0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_021",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.8,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_022",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.0,
+    -0.4
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_023",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    -0.4,
+    -0.8
+   ],
+   "visible_in_window": true
+  },
+  {
+   "slot_id": "ev_b2_024",
+   "block": 2,
+   "cond": "HEAD_ALLOWED",
+   "uv": [
+    0.0,
+    0.0
+   ],
+   "visible_in_window": true
+  }
+ ]
+}

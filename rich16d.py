@@ -34,6 +34,23 @@ _DIST = np.zeros((4, 1), dtype=np.float64)
 
 RICH_DIM = 16
 
+# 実測カメラ行列（任意）。None なら従来どおり f=画像幅・主点=画像中心。
+# 画像サイズが一致するフレームにだけ適用する（解像度が違えば K は流用できない）。
+_CAMERA_K = None   # ((w, h), K 3x3)
+
+
+def set_camera_matrix(K, size, mirrored=False):
+    """実測 K(3x3) を設定。size=(w,h)。mirrored=True はフレームを左右反転して使う場合（cx→w-cx）。
+    K=None で解除。"""
+    global _CAMERA_K
+    if K is None:
+        _CAMERA_K = None
+        return
+    K = np.array(K, dtype=np.float64)
+    if mirrored:
+        K[0, 2] = size[0] - K[0, 2]
+    _CAMERA_K = ((int(size[0]), int(size[1])), K)
+
 
 def _geo_normalize(pupil, inner, outer):
     """虹彩を目頭・目尻の中点基準にし、目の軸で回転、目幅で正規化。
@@ -60,8 +77,11 @@ def rich_16d_from_lms(lms, w, h):
     L_px = np.mean([P(i) for i in _LEFT_IRIS], axis=0)
     R_px = np.mean([P(i) for i in _RIGHT_IRIS], axis=0)
 
-    f = float(w)
-    cam = np.array([[f, 0, w / 2], [0, f, h / 2], [0, 0, 1]], dtype=np.float64)
+    if _CAMERA_K is not None and _CAMERA_K[0] == (int(w), int(h)):
+        cam = _CAMERA_K[1]
+    else:
+        f = float(w)
+        cam = np.array([[f, 0, w / 2], [0, f, h / 2], [0, 0, 1]], dtype=np.float64)
     face_2d = np.array([[lms[i][0] * w, lms[i][1] * h] for i in _FACE_2D_IDX], dtype=np.float64)
     # SQPNP は姿勢std を桁違いに安定化する(roll 76→8°)が、視線精度は改善せず合算30+が
     # 11.66→14.13cm と悪化した(2026-07-17検証)。姿勢のブレは横向き精度の主因ではない

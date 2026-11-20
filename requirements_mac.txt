@@ -1,0 +1,6 @@
+# Mac (Apple Silicon) 用の追加依存。pip install -e . のあとに入れる
+#   pip install -r requirements_mac.txt
+# センターフレームoff・画面サイズ取得・窓配置(macos.py)に使う
+pyobjc-framework-AVFoundation
+pyobjc-framework-Quartz
+pyobjc-framework-Cocoa

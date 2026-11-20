@@ -1,0 +1,217 @@
+{
+ "subject_id": "subject_00",
+ "created": "2026-10-12T00:12:33",
+ "role": "pilot",
+ "config_path": "/Users/ryotaro_s/tgaze/experiments/phase6_kit/config.json",
+ "config_sha256": "6a1364ace3df64af7f87c28492ae688554dc8c2315f296b0fca6856bd51e4a90",
+ "frozen_protocol_hash": "e400ea869503b60c",
+ "model_onnx_sha256": "db19af0b9521dc2e83d66cfbc324acf62905fbfe6ca820ab7ea286a9dac1c25e",
+ "runtime": {
+  "onnx_path": "/Users/ryotaro_s/tgaze/experiments/phase6_kit/model/final_cpu_model.onnx",
+  "ort_session_providers": [
+   "CPUExecutionProvider"
+  ],
+  "ort_available_providers": [
+   "CoreMLExecutionProvider",
+   "AzureExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "mediapipe_delegate": "CPU",
+  "mediapipe_running_mode": "VIDEO",
+  "mirrored": true,
+  "rich16d_set_camera_matrix": "set_camera_matrix(K_raw, (1920,1080), mirrored=True)",
+  "K_raw": [
+   [
+    1442.5767993783895,
+    0.0,
+    977.7219400868782
+   ],
+   [
+    0.0,
+    1437.330171545603,
+    516.4733520932359
+   ],
+   [
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "K_mirrored": [
+   [
+    1442.5767993783895,
+    0.0,
+    942.2780599131218
+   ],
+   [
+    0.0,
+    1437.330171545603,
+    516.4733520932359
+   ],
+   [
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "K_matches_training": true,
+  "K_max_abs_diff_vs_training_px": 0.0,
+  "torch_loaded": false
+ },
+ "camera_matrix": {
+  "path": "/Users/ryotaro_s/tgaze/results/camera_calib/1920x1080_mac/camera_matrix.json",
+  "host_in_json": "taruyaryoutarounoMacBook-Air",
+  "image_size": [
+   1920,
+   1080
+  ],
+  "K": [
+   [
+    1442.5767993783895,
+    0.0,
+    977.7219400868782
+   ],
+   [
+    0.0,
+    1437.330171545603,
+    516.4733520932359
+   ],
+   [
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "dist_k1_k2_p1_p2_k3": [
+   -0.031153903362728073,
+   0.048274455977853896,
+   -0.00267994446415936,
+   0.0030347878674039765,
+   -0.0615659522216111
+  ],
+  "this_machine": "taruyaryoutarounoMacBook-Air",
+  "host_match": true
+ },
+ "camera": {
+  "size": [
+   1920,
+   1080
+  ],
+  "reported_fps_property": 15.0,
+  "backend": "AVFOUNDATION",
+  "center_stage_disabled": true
+ },
+ "screen_layout": {
+  "source": "NSScreen.mainScreen",
+  "backing_scale": 2.0,
+  "n_screens": 1,
+  "screen_pt": [
+   1470,
+   956
+  ],
+  "window_pt": [
+   0,
+   32,
+   1470,
+   924
+  ],
+  "canvas_px": [
+   1470,
+   924
+  ],
+  "display_mm": [
+   290.6,
+   189.0
+  ],
+  "mm_per_pt": [
+   0.19768707482993197,
+   0.19769874476987448
+  ]
+ },
+ "fake_camera": false,
+ "fake_identity": null,
+ "platform": {
+  "system": "Darwin",
+  "machine": "arm64",
+  "mac_ver": "26.5.2",
+  "python": "3.12.15",
+  "processor": "arm"
+ },
+ "sessions": [
+  {
+   "session_id": "sanity_20261012T001355",
+   "session": "sanity",
+   "start": "2026-10-12T00:13:55"
+  },
+  {
+   "session_id": "calibration_20261012T001440",
+   "session": "calibration",
+   "start": "2026-10-12T00:14:40"
+  },
+  {
+   "session_id": "evaluation_20261012T001638",
+   "session": "evaluation",
+   "start": "2026-10-12T00:16:38"
+  }
+ ],
+ "sanity": {
+  "time": "2026-10-12T00:14:20",
+  "median_pred_uv": {
+   "left": [
+    -0.9142036437988281,
+    0.5175878256559372
+   ],
+   "right": [
+    0.761411651968956,
+    0.2906668670475483
+   ],
+   "up": [
+    -0.18806544691324234,
+    1.1299187541007996
+   ],
+   "down": [
+    0.02920101210474968,
+    -0.5591496378183365
+   ]
+  },
+  "dx_right_minus_left_cm": 24.346690247505904,
+  "dy_up_minus_down_cm": 15.961696303635835,
+  "x_direction_ok": true,
+  "y_direction_ok": true,
+  "pass": true
+ },
+ "geometry_check": {
+  "confirmed": true,
+  "time": "2026-10-12T00:13:44",
+  "layout": {
+   "screen_pt": [
+    1470,
+    956
+   ],
+   "window_pt": [
+    0,
+    32,
+    1470,
+    924
+   ],
+   "canvas_px": [
+    1470,
+    924
+   ],
+   "display_mm": [
+    290.6,
+    189.0
+   ],
+   "mm_per_pt": [
+    0.19768707482993197,
+    0.19769874476987448
+   ]
+  }
+ },
+ "no_personal_names_stored": true,
+ "versions": {
+  "opencv": "5.0.0",
+  "mediapipe": "1.1.0",
+  "onnxruntime": "1.31.0"
+ }
+}

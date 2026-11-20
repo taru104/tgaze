@@ -1,0 +1,53 @@
+{
+ "time": "2026-10-12T00:21:40",
+ "frames_processed": 300,
+ "frames_with_face": 300,
+ "camera_fps": 30.023194999893153,
+ "effective_fps": 29.96124512940681,
+ "latency_ms": {
+  "mediapipe": {
+   "mean": 7.308983460146313,
+   "median": 7.351416992605664,
+   "p95": 8.149704201787245
+  },
+  "features": {
+   "mean": 0.6382234614769308,
+   "median": 0.6418539996957406,
+   "p95": 0.7205833651823923
+  },
+  "onnx": {
+   "mean": 0.07391031501659502,
+   "median": 0.07093700696714222,
+   "p95": 0.09602739883121106
+  },
+  "total_m8_only": {
+   "mean": 8.609746002184693,
+   "median": 8.70299999951385,
+   "p95": 9.57014854211593
+  },
+  "eye_patch": {
+   "mean": 0.0001171808495807151,
+   "median": 0.00012500095181167126,
+   "p95": 0.000166997779160738
+  },
+  "total": {
+   "mean": 8.609863183034273,
+   "median": 8.703145504114218,
+   "p95": 9.570273543067742
+  }
+ },
+ "cpu_percent_of_one_core": 62.72226331236692,
+ "n_logical_cpu": 10,
+ "rss_mb": 530.6875,
+ "ort_session_providers": [
+  "CPUExecutionProvider"
+ ],
+ "ort_available_providers": [
+  "CoreMLExecutionProvider",
+  "AzureExecutionProvider",
+  "CPUExecutionProvider"
+ ],
+ "mediapipe_delegate": "CPU",
+ "torch_loaded": false,
+ "fake_camera": false
+}
