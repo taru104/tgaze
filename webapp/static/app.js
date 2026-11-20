@@ -14,8 +14,9 @@ const POINT_TIMEOUT_MS = 4000;  // 顔が取れなくてもこの時間で次の
 const VIEW_DIST_CM = 60;        // 誤差を角度に換算するときの想定距離
 const FIX_DISPERSION_PX = 80;   // 注視（fixation）とみなす広がりの上限（ステージ上の px）
 const FIX_MIN_MS = 100;         // 注視とみなす最短時間
-const AREA_COLORS = { "メインビジュアル": "#2f6bff", "エントリーボタン": "#6a2cff", "説明文エリア": "#19b3c9",
-  "ナビゲーション": "#3c4d78", "その他": "#c34bd6" };
+const AREA_COLORS = { "ヘッダー・検索": "#3c4d78", "カテゴリ": "#8a93b8", "セールのバナー": "#6a2cff",
+  "ワイヤレスイヤホン": "#2f6bff", "スマートウォッチ": "#19b3c9", "機械学習の本": "#19b36b", "コーヒーメーカー": "#f0a020",
+  "ランニングシューズ": "#ff6b4a", "リュック": "#e0479e", "その他": "#c9cede" };
 const STORE_KEY = "tgaze.sessions.v1";
 
 const state = { stream: null, calib: null, calibrated: false, info: { model: "", capture: [640, 480] } };

@@ -222,41 +222,41 @@
   <div class="stage" id="stage">
     <!-- 計測対象のサンプルページ（data-area がエリア分析の単位） -->
     <div class="demo shop" id="demo">
-      <!-- 架空の EC サイト（実在のサービスではない）。data-area がエリア分析の単位 -->
+      <!-- 架空の EC サイト（実在のサービスではない）。data-area がエリア分析の単位（商品はカード1枚＝1エリア） -->
       <div class="shop-head" data-area="ヘッダー・検索"><b class="shop-logo">tgaze<span>market</span></b>
         <div class="shop-search">🔍 なにをお探しですか？</div><span class="shop-cart">🛒 カート</span></div>
       <div class="shop-cats" data-area="カテゴリ"><span>すべて</span><span>家電</span><span>本</span><span>ファッション</span><span>キッチン</span><span>スポーツ</span></div>
       <div class="shop-hero" data-area="セールのバナー"><small>期間限定</small><b>タイムセール 開催中</b><span>人気の商品が最大 40% OFF</span></div>
       <div class="shop-grid">
-        <div class="shop-card">
-          <div class="shop-img" data-area="商品画像">🎧</div>
-          <div class="shop-info" data-area="価格・評価"><p>ワイヤレスイヤホン ノイズキャンセリング</p><span class="stars">★★★★☆ <em>4.3（1,203）</em></span><strong>￥4,980</strong></div>
-          <div class="shop-buy" data-area="カートに入れる">カートに入れる</div>
+        <div class="shop-card" data-area="ワイヤレスイヤホン">
+          <div class="shop-img">🎧</div>
+          <div class="shop-info"><p>ワイヤレスイヤホン ノイズキャンセリング</p><span class="stars">★★★★☆ <em>4.3（1,203）</em></span><strong>￥4,980</strong></div>
+          <div class="shop-buy">カートに入れる</div>
         </div>
-        <div class="shop-card">
-          <div class="shop-img" data-area="商品画像">⌚</div>
-          <div class="shop-info" data-area="価格・評価"><p>スマートウォッチ 心拍・睡眠計測</p><span class="stars">★★★★☆ <em>4.1（862）</em></span><strong>￥12,800</strong></div>
-          <div class="shop-buy" data-area="カートに入れる">カートに入れる</div>
+        <div class="shop-card" data-area="スマートウォッチ">
+          <div class="shop-img">⌚</div>
+          <div class="shop-info"><p>スマートウォッチ 心拍・睡眠計測</p><span class="stars">★★★★☆ <em>4.1（862）</em></span><strong>￥12,800</strong></div>
+          <div class="shop-buy">カートに入れる</div>
         </div>
-        <div class="shop-card">
-          <div class="shop-img" data-area="商品画像">📚</div>
-          <div class="shop-info" data-area="価格・評価"><p>はじめての機械学習 入門書</p><span class="stars">★★★★☆ <em>4.6（2,415）</em></span><strong>￥2,640</strong></div>
-          <div class="shop-buy" data-area="カートに入れる">カートに入れる</div>
+        <div class="shop-card" data-area="機械学習の本">
+          <div class="shop-img">📚</div>
+          <div class="shop-info"><p>はじめての機械学習 入門書</p><span class="stars">★★★★☆ <em>4.6（2,415）</em></span><strong>￥2,640</strong></div>
+          <div class="shop-buy">カートに入れる</div>
         </div>
-        <div class="shop-card">
-          <div class="shop-img" data-area="商品画像">☕</div>
-          <div class="shop-info" data-area="価格・評価"><p>全自動コーヒーメーカー</p><span class="stars">★★★★☆ <em>4.0（534）</em></span><strong>￥7,980</strong></div>
-          <div class="shop-buy" data-area="カートに入れる">カートに入れる</div>
+        <div class="shop-card" data-area="コーヒーメーカー">
+          <div class="shop-img">☕</div>
+          <div class="shop-info"><p>全自動コーヒーメーカー</p><span class="stars">★★★★☆ <em>4.0（534）</em></span><strong>￥7,980</strong></div>
+          <div class="shop-buy">カートに入れる</div>
         </div>
-        <div class="shop-card">
-          <div class="shop-img" data-area="商品画像">👟</div>
-          <div class="shop-info" data-area="価格・評価"><p>ランニングシューズ 軽量モデル</p><span class="stars">★★★★☆ <em>4.4（1,087）</em></span><strong>￥8,900</strong></div>
-          <div class="shop-buy" data-area="カートに入れる">カートに入れる</div>
+        <div class="shop-card" data-area="ランニングシューズ">
+          <div class="shop-img">👟</div>
+          <div class="shop-info"><p>ランニングシューズ 軽量モデル</p><span class="stars">★★★★☆ <em>4.4（1,087）</em></span><strong>￥8,900</strong></div>
+          <div class="shop-buy">カートに入れる</div>
         </div>
-        <div class="shop-card">
-          <div class="shop-img" data-area="商品画像">🎒</div>
-          <div class="shop-info" data-area="価格・評価"><p>通学・通勤リュック 25L</p><span class="stars">★★★★☆ <em>4.2（759）</em></span><strong>￥5,480</strong></div>
-          <div class="shop-buy" data-area="カートに入れる">カートに入れる</div>
+        <div class="shop-card" data-area="リュック">
+          <div class="shop-img">🎒</div>
+          <div class="shop-info"><p>通学・通勤リュック 25L</p><span class="stars">★★★★☆ <em>4.2（759）</em></span><strong>￥5,480</strong></div>
+          <div class="shop-buy">カートに入れる</div>
         </div>
       </div>
     </div>
