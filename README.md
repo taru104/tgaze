@@ -1,3 +1,5 @@
+> **提出用（`submission` ブランチ）**：Web アプリの起動方法と内容は [SUBMISSION.md](SUBMISSION.md) を参照してください。
+
 <h1 align="center">Tgaze</h1>
 
 <p align="center">

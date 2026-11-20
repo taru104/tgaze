@@ -221,9 +221,11 @@ def main():
     ap.add_argument("--host", default="127.0.0.1", help="既定はこのPCからのみ接続可")
     ap.add_argument("--model", default=None,
                     help="M8 系モデル: 撮影キットからの相対パス（例 models_alt/m8_phase8_1234）か frozen（本番 M8）。省略時は tgaze 関数版")
-    ap.add_argument("--kit", default="~/tgaze/experiments/phase6_kit", help="撮影キット（experiments/phase6_kit）の場所")
+    ap.add_argument("--kit", default=str(ROOT / "experiments" / "phase6_kit"), help="撮影キット（experiments/phase6_kit）の場所")
     args = ap.parse_args()
     if args.model:
+        import os
+        os.environ.setdefault("TGAZE_DIR", str(ROOT))      # 撮影キットが読む tgaze の部品・カメラ行列は、このリポジトリのものを使う
         from m8_backend import M8App
         kit = str(Path(args.kit).expanduser())
         model = args.model if args.model == "frozen" or Path(args.model).is_absolute() else str(Path(kit) / args.model)

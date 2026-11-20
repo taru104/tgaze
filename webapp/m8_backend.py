@@ -2,7 +2,7 @@
 
   python webapp/server.py --model models_alt/m8_phase8_1234          # 1234人・顔の点のみ
   python webapp/server.py --model frozen                             # 本番（凍結 M8）
-  （--kit で撮影キットの場所を指定。既定は ~/tgaze/experiments/phase6_kit）
+  （--kit で撮影キットの場所を指定。既定はこのリポジトリの experiments/phase6_kit）
 
 tgaze.GazeTracker 版との違い:
   - 入力は 1920x1080 のカメラ映像（M8 は実測したカメラ行列と 1920x1080 が前提）。ブラウザは /api/info の capture で撮る
@@ -57,7 +57,12 @@ class M8App:
         tg = C.tgaze_dir(self.cfg)       # 撮影キット側の tgaze（実測 K 対応の rich16d）を sys.path の先頭に置いてから読み込む
         import m8_cpu
         self.C, self.m8 = C, m8_cpu
-        K, _ = m8_cpu.load_camera_matrix(self.cfg, tg)
+        # 実測カメラ行列は開発に使った MacBook Air 13" (M4) の内蔵カメラ用。別の PC でも動かせるように、
+        # 測った PC と違っても止めずに警告を出して続ける（その場合、精度は下がる可能性がある）
+        K, kinfo = m8_cpu.load_camera_matrix(self.cfg, tg, allow_host_mismatch=True)
+        if not kinfo.get("host_match"):
+            print(f"[注意] カメラ行列は {kinfo.get('host_in_json')} の内蔵カメラで測ったもの（この PC: {kinfo.get('this_machine')}）。"
+                  "別の PC では推定がずれる可能性があります")
         self.rt = m8_cpu.M8Runtime(self.cfg, tg, K)          # 顔の点・目パッチの抽出（と凍結 M8）
         self.alt = None if model in ("frozen", "model") else m8_cpu.OfflineM8(model, K, tg)
         self.needs_patch = self.alt is not None and self.alt.eye_pca is not None

@@ -1,0 +1,10 @@
+# Tgaze Web アプリ（提出版）の実行に必要なパッケージ。Python 3.10 以上（動作確認は 3.12）
+numpy
+opencv-python
+mediapipe
+onnxruntime          # CPU 版（推論は CPUExecutionProvider のみ）
+scikit-learn         # 関数版 tgaze（--model なしで起動したとき）の回帰
+scipy
+pyobjc-framework-AVFoundation; sys_platform == "darwin"   # macOS：センターフレームの制御・機種名の取得
+pyobjc-framework-Quartz; sys_platform == "darwin"
+pyobjc-framework-Cocoa; sys_platform == "darwin"          # macOS：画面サイズ・ノッチの取得
