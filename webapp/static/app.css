@@ -259,3 +259,30 @@ body.fs .panel:hover { opacity: 1; }
   transition: transform .5s cubic-bezier(.1, .8, .3, 1), opacity .5s ease; }
 .game-dot { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; pointer-events: none;
   background: rgba(47, 107, 255, .35); box-shadow: 0 0 0 2px rgba(255, 255, 255, .8); transition: left .05s linear, top .05s linear; }
+
+/* 計測画面の背景：架空の EC サイト（tgaze market）。視線の点が目立つように薄く表示する */
+.demo.shop { grid-template-rows: auto auto auto 1fr; gap: 12px; padding: 14px 22px 18px; font-size: 14px; color: var(--ink); }
+.demo.shop { opacity: .5; }
+.shop-head { display: flex; align-items: center; gap: 18px; padding: 10px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--line); }
+.shop-logo { font-size: 22px; font-weight: 900; color: var(--ink); }
+.shop-logo span { color: var(--violet); font-weight: 700; margin-left: 2px; }
+.shop-search { flex: 1; padding: 9px 14px; border-radius: 999px; background: #f1f3fa; color: var(--sub); }
+.shop-cart { font-weight: 700; color: var(--ink); }
+.shop-cats { display: flex; gap: 22px; padding: 2px 8px; color: var(--sub); font-weight: 600; }
+.shop-hero { display: grid; gap: 4px; padding: 16px 22px; border-radius: 14px; color: #fff; background: var(--grad); }
+.shop-hero small { opacity: .8; font-weight: 700; letter-spacing: .1em; }
+.shop-hero b { font-size: 26px; }
+.shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 12px; min-height: 0; }
+.shop-card { display: grid; grid-template-rows: 1fr auto auto; gap: 6px; padding: 10px; border-radius: 12px; background: #fff; border: 1px solid var(--line); min-height: 0; }
+.shop-img { display: grid; place-items: center; font-size: 54px; border-radius: 10px; background: #f3f5fd; min-height: 0; }
+.shop-info p { margin: 0 0 2px; font-weight: 600; }
+.shop-info .stars { color: #f0a020; font-size: 13px; }
+.shop-info .stars em { color: var(--sub); font-style: normal; }
+.shop-info strong { display: block; font-size: 20px; color: var(--ink); }
+.shop-buy { text-align: center; padding: 8px; border-radius: 999px; background: #ffe7a8; color: #4a3600; font-weight: 700; }
+/* 商品カードは横長（左に写真、右に説明、下にボタン）。高さが足りなくても写真がつぶれない */
+.shop-card { grid-template-columns: auto 1fr; grid-template-rows: 1fr auto; align-items: center; column-gap: 12px; }
+.shop-img { grid-row: 1; width: clamp(56px, 11vh, 110px); aspect-ratio: 1; overflow: hidden; font-size: clamp(30px, 6.5vh, 66px); line-height: 1; }
+.shop-info { grid-row: 1; min-width: 0; }
+.shop-info p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shop-buy { grid-column: 1 / span 2; }
