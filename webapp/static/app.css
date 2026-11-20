@@ -281,3 +281,6 @@ body.fs .panel:hover { opacity: 1; }
 .kb-key.done { animation: kbDone .3s ease; }
 @keyframes kbDone { 0% { background: #efe8ff; } 100% { background: #fff; } }
 .kb-msg { position: absolute; bottom: 12px; left: 0; width: 100%; text-align: center; font-size: 13px; color: var(--sub); }
+.kb-grid.qwerty { grid-template-columns: repeat(20, 1fr); grid-template-rows: repeat(4, 1fr); gap: 12px; }
+.kb-grid.qwerty .kb-key { font-size: 40px; border-radius: 14px; }
+.kb-grid.qwerty .kb-key.fn { font-size: 24px; }

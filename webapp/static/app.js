@@ -568,13 +568,13 @@ ENTER.game = async () => {
 LEAVE.game = () => { stopLoop(); game.timers.forEach(clearTimeout); game.timers = []; $("#gameBurst").innerHTML = ""; exitFs(); };
 
 // ── 視線キーボード ─────────────────────────────
-// 今の精度（平均誤差 約3 cm）でも押せるように、横4×縦3の大きなキーを2段階で選ぶ：
-//   1段目で行（あ・か・さ…）を選ぶ → 2段目でその行の文字を選ぶ → 入力されて1段目に戻る。
+// 既定は QWERTY（画面いっぱいの大きなキー。1キー 約2.9 cm 幅で平均誤差と同じくらいなので、光ったキーを見て視線を合わせ直す前提）。
+// 「かな」で、横4×縦3の大きなキーを2段階で選ぶひらがな入力に切り替え（行を選ぶ → 文字を選ぶ）。「ABC」で QWERTY に戻る。
 // キーを KB_DWELL_MS 見つめると決定。決定の直後 KB_COOLDOWN_MS は次を受け付けない（同じ場所の新しいキーを続けて押さないため）。
 const KB_DWELL_MS = 800, KB_COOLDOWN_MS = 700;
 const KB_ROWS = [["あ", "あいうえお"], ["か", "かきくけこ"], ["さ", "さしすせそ"], ["た", "たちつてと"], ["な", "なにぬねの"], ["は", "はひふへほ"],
                  ["ま", "まみむめも"], ["や", "やゆよ"], ["ら", "らりるれろ"], ["わ", "わをんー"]];
-const kb = { text: "", level: null, keys: [], hot: -1, prog: 0, last: 0, cool: 0 };
+const kb = { text: "", mode: "qwerty", level: null, keys: [], hot: -1, prog: 0, last: 0, cool: 0 };
 
 async function startKeyboard() { await enterFs(); location.hash = "#/keyboard"; }
 $("#btnKbZero").addEventListener("click", startKeyboard);
@@ -582,21 +582,36 @@ $("#btnKbDone").addEventListener("click", startKeyboard);
 infoReady.then(() => { $("#btnKbZero").hidden = !state.info.zero_shot; });
 
 function kbLayout() {
-  // keys: [{label, sub, cls, act}]（12個。足りない分は空き）
+  // keys: [{label, sub, cls, act, pos}]。pos = [行, 開始列, 列数]（QWERTY は 20列のグリッドで半キーずらす）
   const keys = [];
-  if (kb.level === null) {
-    KB_ROWS.forEach(([head, chars], i) => keys.push({ label: head, sub: chars, act: () => { kb.level = i; } }));
-    keys.push({ label: "⌫", sub: "1文字消す", cls: "fn", act: () => { kb.text = [...kb.text].slice(0, -1).join(""); } });
-    keys.push({ label: "✕", sub: "全部消す", cls: "fn", act: () => { kb.text = ""; } });
+  const grid = $("#kbGrid");
+  if (kb.mode === "qwerty") {
+    grid.classList.add("qwerty");
+    const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"], offs = [1, 2, 4];
+    rows.forEach((row, r) => [...row].forEach((ch, i) =>
+      keys.push({ label: ch, pos: [r + 1, offs[r] + 2 * i, 2], act: () => { kb.text += ch; } })));
+    keys.push({ label: "かな", cls: "fn", pos: [4, 1, 3], act: () => { kb.mode = "kana"; kb.level = null; } });
+    keys.push({ label: "スペース", cls: "fn space", pos: [4, 4, 9], act: () => { kb.text += " "; } });
+    keys.push({ label: "⌫", sub: "1文字消す", cls: "fn", pos: [4, 13, 4], act: () => { kb.text = [...kb.text].slice(0, -1).join(""); } });
+    keys.push({ label: "✕", sub: "全部消す", cls: "fn", pos: [4, 17, 4], act: () => { kb.text = ""; } });
   } else {
-    [...KB_ROWS[kb.level][1]].forEach((ch) => keys.push({ label: ch, act: () => { kb.text += ch; kb.level = null; } }));
-    while (keys.length < 11) keys.push({ cls: "blank" });
-    keys.push({ label: "↩", sub: "戻る", cls: "fn", act: () => { kb.level = null; } });
+    grid.classList.remove("qwerty");
+    if (kb.level === null) {
+      KB_ROWS.forEach(([head, chars], i) => keys.push({ label: head, sub: chars, act: () => { kb.level = i; } }));
+      keys.push({ label: "⌫", sub: "1文字消す", cls: "fn", act: () => { kb.text = [...kb.text].slice(0, -1).join(""); } });
+      keys.push({ label: "ABC", sub: "英字に切り替え", cls: "fn", act: () => { kb.mode = "qwerty"; } });
+    } else {
+      [...KB_ROWS[kb.level][1]].forEach((ch) => keys.push({ label: ch, act: () => { kb.text += ch; kb.level = null; } }));
+      while (keys.length < 11) keys.push({ cls: "blank" });
+      keys.push({ label: "↩", sub: "戻る", cls: "fn", act: () => { kb.level = null; } });
+    }
+    while (keys.length < 12) keys.push({ cls: "blank" });
   }
-  while (keys.length < 12) keys.push({ cls: "blank" });
   kb.keys = keys;
-  $("#kbGrid").innerHTML = keys.map((k) =>
-    `<div class="kb-key ${k.cls || ""}">${k.label || ""}${k.sub ? `<small>${k.sub}</small>` : ""}<i class="fill"></i></div>`).join("");
+  grid.innerHTML = keys.map((k) => {
+    const st = k.pos ? ` style="grid-row:${k.pos[0]};grid-column:${k.pos[1]} / span ${k.pos[2]}"` : "";
+    return `<div class="kb-key ${k.cls || ""}"${st}>${k.label || ""}${k.sub ? `<small>${k.sub}</small>` : ""}<i class="fill"></i></div>`;
+  }).join("");
   kb.hot = -1; kb.prog = 0;
 }
 function kbRenderText() {
@@ -607,7 +622,7 @@ function kbRenderText() {
 ENTER.keyboard = async () => {
   if (!(await ensureCamera())) { location.hash = "#/check"; return; }
   await sleep(300);
-  Object.assign(kb, { level: null, hot: -1, prog: 0, last: performance.now(), cool: 0 });
+  Object.assign(kb, { mode: "qwerty", level: null, hot: -1, prog: 0, last: performance.now(), cool: 0 });
   kbLayout(); kbRenderText();
   startLoop((r) => {
     const now = performance.now(), dt = Math.min(200, now - kb.last); kb.last = now;
