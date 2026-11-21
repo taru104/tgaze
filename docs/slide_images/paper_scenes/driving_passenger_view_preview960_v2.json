@@ -1,0 +1,284 @@
+{
+ "note": "論文の撮り方を 3DCG で再現したイメージ。論文の図の写しではない。学習には使っていない（学習データの生成・学習はしていない）",
+ "paper": {
+  "name": "（未確定）運転中の視線データの撮り方",
+  "reproduced_from": "依頼文に書かれた撮り方（左ハンドルの車内、頭に着ける視線計測器とカメラ、車のカメラ 2 台）。元の論文は未確定のため、車のカメラの向きは仮（front = 道路向き、back = 運転者向き）"
+ },
+ "image": "driving_passenger_view_preview960_v2.png",
+ "size_px": [
+  960,
+  540
+ ],
+ "origin": "top-left, x right, y down",
+ "nogear_version": false,
+ "person": {
+  "generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3) + clothes + shoes; seated by rotating leg / spine bones; hands on the wheel by Blender IK",
+  "identity": 250,
+  "appearance": {
+   "sex_for_appearance": "female",
+   "race_for_appearance": "caucasian",
+   "skin": "young_caucasian_female",
+   "hair": "short02",
+   "iris": "lightblue"
+  },
+  "clothes": "female_casualsuit02",
+  "shoes": "shoes02",
+  "pose": "運転席に座り、ハンドルを 10 時と 2 時で握る"
+ },
+ "gaze": {
+  "target": "前の道路（自車線、約 25 m 先）",
+  "target_world_m": [
+   0.15,
+   -25.0375,
+   0.2867
+  ],
+  "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik",
+  "residual_deg": {
+   "left": 0.0004,
+   "right": 0.0005
+  },
+  "eye_center_world_m": {
+   "left": [
+    0.0285,
+    -0.0375,
+    1.5157
+   ],
+   "right": [
+    -0.0285,
+    -0.0375,
+    1.5157
+   ]
+  }
+ },
+ "gear": {
+  "front_camera": {
+   "location_world_m": [
+    -0.37,
+    -1.0117,
+    1.0771
+   ],
+   "direction": [
+    0,
+    -1,
+    0
+   ],
+   "where": "フロントガラスの下の中央",
+   "facing": "道路（仮）"
+  },
+  "back_camera": {
+   "location_world_m": [
+    -0.3699,
+    -0.5412,
+    1.2633
+   ],
+   "direction": [
+    0.5488,
+    0.7474,
+    0.3745
+   ],
+   "where": "ダッシュボード中央の画面の上",
+   "facing": "運転者（仮）"
+  },
+  "head_eye_tracker": {
+   "parts": "頭を一周するバンド、額のカメラ（前向き）、こめかみから伸びるアームの先の目を撮るカメラ（左右）"
+  }
+ },
+ "car": {
+  "drive": "左ハンドル（運転席は車の左、助手席は運転者の右 = -X）",
+  "car_center_x_m": -0.37,
+  "steering_wheel_center_m": [
+   0.0,
+   -0.3917,
+   1.0117
+  ],
+  "steering_wheel_radius_m": 0.17,
+  "center_screen_m": [
+   -0.37,
+   -0.5417,
+   1.1617
+  ],
+  "world_axes": "運転者は -Y（前）を向く。運転者の右 = -X、上 = +Z"
+ },
+ "camera": {
+  "view": "助手席側から運転者を見る",
+  "location_world_m": [
+   -0.69,
+   0.2825,
+   1.5357
+  ],
+  "look_at_world_m": [
+   0.02,
+   -0.3575,
+   1.3457
+  ],
+  "lens_mm": 20,
+  "sensor_width_mm": 36,
+  "hidden_for_view": [
+   "助手席の背もたれと頭当て（視点の手前にあるため描いていない）"
+  ]
+ },
+ "image_px": {
+  "eyes": [
+   313.1,
+   179.2
+  ],
+  "front_camera": [
+   819.8,
+   376.7
+  ],
+  "back_camera": [
+   736.3,
+   343.0
+  ]
+ },
+ "hands": {
+  "L": {
+   "grip_point_m": [
+    0.1472,
+    -0.4318,
+    1.0867
+   ],
+   "clock": "10 時",
+   "wrist_bend_deg(forearm_vs_hand)": 14.6,
+   "forearm_twist_deg_total": -0.6,
+   "forearm_twist_split": "lowerarm01 と lowerarm02 に半分ずつ",
+   "finger_curl_deg_[base,middle,tip]": {
+    "finger2": [
+     36.0,
+     41.4,
+     28.8
+    ],
+    "finger3": [
+     51.0,
+     58.7,
+     40.8
+    ],
+    "finger4": [
+     42.0,
+     48.3,
+     33.6
+    ],
+    "finger5": [
+     24.0,
+     27.6,
+     19.2
+    ]
+   },
+   "fingertip_to_rim_axis_mm": {
+    "2": 28.9,
+    "3": 27.2,
+    "4": 20.6,
+    "5": 21.8
+   },
+   "rim_tube_radius_mm": 15.0,
+   "knuckle_to_rim_axis_mm": 30.4,
+   "palm_center_to_rim_axis_mm": 45.6,
+   "elbow_m": [
+    0.207,
+    -0.135,
+    1.139
+   ],
+   "shoulder_m": [
+    0.162,
+    0.038,
+    1.294
+   ]
+  },
+  "R": {
+   "grip_point_m": [
+    -0.1472,
+    -0.4318,
+    1.0867
+   ],
+   "clock": "2 時",
+   "wrist_bend_deg(forearm_vs_hand)": 14.6,
+   "forearm_twist_deg_total": 0.6,
+   "forearm_twist_split": "lowerarm01 と lowerarm02 に半分ずつ",
+   "finger_curl_deg_[base,middle,tip]": {
+    "finger2": [
+     36.0,
+     41.4,
+     28.8
+    ],
+    "finger3": [
+     51.0,
+     58.7,
+     40.8
+    ],
+    "finger4": [
+     42.0,
+     48.3,
+     33.6
+    ],
+    "finger5": [
+     24.0,
+     27.6,
+     19.2
+    ]
+   },
+   "fingertip_to_rim_axis_mm": {
+    "2": 28.9,
+    "3": 27.2,
+    "4": 20.6,
+    "5": 21.7
+   },
+   "rim_tube_radius_mm": 15.0,
+   "knuckle_to_rim_axis_mm": 30.4,
+   "palm_center_to_rim_axis_mm": 45.6,
+   "elbow_m": [
+    -0.207,
+    -0.135,
+    1.139
+   ],
+   "shoulder_m": [
+    -0.162,
+    0.038,
+    1.294
+   ]
+  }
+ },
+ "hand_check_images": {
+  "passenger": {
+   "image": "driving_hands_check_passenger.png",
+   "camera_location_m": [
+    -0.62,
+    -0.232,
+    1.187
+   ],
+   "lens_mm": 40
+  },
+  "top": {
+   "image": "driving_hands_check_top.png",
+   "camera_location_m": [
+    0.0,
+    -0.332,
+    1.637
+   ],
+   "lens_mm": 35
+  }
+ },
+ "changes_v2": {
+  "arms_and_hands": [
+   "腕：IK（chain 4 = upperarm01, upperarm02, lowerarm01, lowerarm02）で手首を置き、肘のポールターゲットを肘の下・外側に置いた。そのあと FK に焼き付けて IK は外した。肩（clavicle, shoulder01）は動かしていない",
+   "手の向き：手の長さ方向は前腕の向きから縁の接線方向の成分を 6 割除いたもの（手首の曲がりを小さく。縁は手のひらを少し斜めに横切る）。手のひらは縁（ハンドルの内側・奥）へ、手の甲は運転者側の外向き。縁の管の中心は指の付け根の手のひら側",
+   "前腕のねじれ：手首の骨の軸まわりのねじれを lowerarm01 と lowerarm02 に半分ずつ入れ、wrist には残りの振りだけを入れた",
+   "指：4 本の指（finger2〜5）の付け根・真ん中・先の 3 関節を、手のひら側へ 3° ずつ（比 1 : 1.15 : 0.8）曲げ、指の関節・指先が縁の管の表面から 7.5 mm（縁の半径 + 指の厚みの半分）に近づいたところで止めた",
+   "親指：縁の運転者側に沿わせ、付け根 12°・真ん中 8° だけ曲げて軽く伸ばした"
+  ],
+  "interior_added": [
+   "ハンドル：縁の中心の半径 0.17 m（外径 約 37 cm）、縁の太さ 3 cm、中央のパッド、3 時・9 時・6 時のスポーク 3 本。面は運転者側へ傾けたまま",
+   "メーター：ハンドルの奥にひさし付きのメーターの台と、丸いメーター 2 つ（目盛り・針付き）",
+   "ダッシュボード：上の面をフロントガラスへ向かって 10 cm 下げ、角を丸めた（ベベル）。中央の画面の左右に送風口 2 つ",
+   "真ん中の画面：電源の切れた黒い画面（何も映さない）",
+   "運転席の背もたれと頭当て（前の版から付いている。形は変えていない）",
+   "front / back camera：4×3×3 cm の明るいグレーの箱に丸いレンズ（金属の輪付き）。置き場所と向きは前の版と同じ（front はダッシュボードの上の面が下がったぶん、上の面に載るように高さだけ合わせた）"
+  ]
+ },
+ "render": {
+  "engine": "CYCLES",
+  "device": "GPU",
+  "samples": 128,
+  "denoise": true,
+  "view_transform": "Standard"
+ }
+}
