@@ -1,0 +1,141 @@
+{
+ "note": "論文の撮り方を 3DCG で再現したイメージ。論文の図の写しではない。学習には使っていない（学習データの生成・学習はしていない）",
+ "paper": {
+  "name": "（未確定）運転中の視線データの撮り方",
+  "reproduced_from": "依頼文に書かれた撮り方（左ハンドルの車内、頭に着ける視線計測器とカメラ、車のカメラ 2 台）。元の論文は未確定のため、車のカメラの向きは仮（front = 道路向き、back = 運転者向き）"
+ },
+ "image": "driving_passenger_view_preview960.png",
+ "size_px": [
+  960,
+  540
+ ],
+ "origin": "top-left, x right, y down",
+ "nogear_version": false,
+ "person": {
+  "generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3) + clothes + shoes; seated by rotating leg / spine bones; hands on the wheel by Blender IK",
+  "identity": 250,
+  "appearance": {
+   "sex_for_appearance": "female",
+   "race_for_appearance": "caucasian",
+   "skin": "young_caucasian_female",
+   "hair": "short02",
+   "iris": "lightblue"
+  },
+  "clothes": "female_casualsuit02",
+  "shoes": "shoes02",
+  "pose": "運転席に座り、ハンドルを 10 時と 2 時で握る"
+ },
+ "gaze": {
+  "target": "前の道路（自車線、約 25 m 先）",
+  "target_world_m": [
+   0.15,
+   -25.0375,
+   0.2867
+  ],
+  "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik",
+  "residual_deg": {
+   "left": 0.0004,
+   "right": 0.0005
+  },
+  "eye_center_world_m": {
+   "left": [
+    0.0285,
+    -0.0375,
+    1.5157
+   ],
+   "right": [
+    -0.0285,
+    -0.0375,
+    1.5157
+   ]
+  }
+ },
+ "gear": {
+  "front_camera": {
+   "location_world_m": [
+    -0.37,
+    -1.0117,
+    1.1767
+   ],
+   "direction": [
+    0,
+    -1,
+    0
+   ],
+   "where": "フロントガラスの下の中央",
+   "facing": "道路（仮）"
+  },
+  "back_camera": {
+   "location_world_m": [
+    -0.3696,
+    -0.5401,
+    1.2686
+   ],
+   "direction": [
+    0.5508,
+    0.749,
+    0.3683
+   ],
+   "where": "ダッシュボード中央の画面の上",
+   "facing": "運転者（仮）"
+  },
+  "head_eye_tracker": {
+   "parts": "頭を一周するバンド、額のカメラ（前向き）、こめかみから伸びるアームの先の目を撮るカメラ（左右）"
+  }
+ },
+ "car": {
+  "drive": "左ハンドル（運転席は車の左、助手席は運転者の右 = -X）",
+  "car_center_x_m": -0.37,
+  "steering_wheel_center_m": [
+   0.0,
+   -0.3917,
+   1.0117
+  ],
+  "steering_wheel_radius_m": 0.185,
+  "center_screen_m": [
+   -0.37,
+   -0.5417,
+   1.1617
+  ],
+  "world_axes": "運転者は -Y（前）を向く。運転者の右 = -X、上 = +Z"
+ },
+ "camera": {
+  "view": "助手席側から運転者を見る",
+  "location_world_m": [
+   -0.69,
+   0.2825,
+   1.5357
+  ],
+  "look_at_world_m": [
+   0.02,
+   -0.3575,
+   1.3457
+  ],
+  "lens_mm": 20,
+  "sensor_width_mm": 36,
+  "hidden_for_view": [
+   "助手席の背もたれと頭当て（視点の手前にあるため描いていない）"
+  ]
+ },
+ "image_px": {
+  "eyes": [
+   313.1,
+   179.2
+  ],
+  "front_camera": [
+   825.6,
+   333.3
+  ],
+  "back_camera": [
+   736.1,
+   339.9
+  ]
+ },
+ "render": {
+  "engine": "CYCLES",
+  "device": "GPU",
+  "samples": 128,
+  "denoise": true,
+  "view_transform": "Standard"
+ }
+}
