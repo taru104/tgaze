@@ -32,6 +32,7 @@ RES_X = int(args[1]) if len(args) > 1 else 1920
 RES_Y = int(args[2]) if len(args) > 2 else 1080
 SAMPLES = int(args[3]) if len(args) > 3 else 128
 os.makedirs(OUT_DIR, exist_ok=True)
+HERE = os.path.dirname(os.path.abspath(__file__))
 PERSON = {"identity": 250, "clothes": "female_casualsuit02", "shoes": "shoes02"}
 f64 = v3.v2.f64
 upd = bpy.context.view_layer.update
@@ -212,7 +213,11 @@ carcam_ring = principled("CarCamRing", (0.85, 0.86, 0.88), 0.25, 1.0)
 # ---------------------------------------------------------------- 車内（運転者の x = 0、助手席は -X 側、車の中心は x = CX）
 CX = -0.37
 X_L, X_R = 0.40, CX * 2 - 0.40          # 運転席側の内壁 / 助手席側の内壁
-wheel_c = np.array([0.0, float(cl.y) - 0.43, float(cl.z) - 0.30])
+# 運転者と座席・床を、ハンドル・ダッシュボード・フロントガラス・屋根に対して うしろへ SHIFT_BACK、下へ SHIFT_DOWN 動かす
+# （めり込みを直すため。ここでは車の前側の部品を前・上へ同じ量だけずらして表す）
+SHIFT_BACK = float(os.environ.get("SHIFT_BACK", "0.05"))   # 太ももがハンドルにめり込まない量
+SHIFT_DOWN = float(os.environ.get("SHIFT_DOWN", "0.07"))
+wheel_c = np.array([0.0, float(cl.y) - 0.43 - SHIFT_BACK, float(cl.z) - 0.30 + SHIFT_DOWN])
 wheel_n = np.array([0.0, 0.88, 0.47])          # ハンドルの面は運転者の方を向き、少し上を向く
 wheel_n /= np.linalg.norm(wheel_n)
 wx_, wy_, _ = frame_axes(wheel_n)              # wx_ = 人の右（-X）、wy_ = ハンドル面の上
@@ -221,19 +226,30 @@ RIM_R = 0.015                                  # 縁の太さ 約 3 cm
 dash_z = float(wheel_c[2]) + 0.13
 dash_near = float(wheel_c[1]) - 0.16
 dash_far = dash_near - 0.55
-ROOF = float(cyc0[2]) + 0.27
+ROOF = float(cyc0[2]) + 0.27 + SHIFT_DOWN
 
-# 座席（運転席・助手席）
+# 座席（運転席・助手席）：座面・背もたれ・頭当ての面を、座った体（服・髪を含む）の形から決める（めり込まないように）
+_bv = np.concatenate([eval_world_verts(o) for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("Human") and o.visible_get()])
+_py = float(pel.y)
+_m = (np.abs(_bv[:, 0]) < 0.22) & (_bv[:, 1] > _py - 0.30) & (_bv[:, 1] < _py + 0.12)
+SEAT = float(_bv[_m][:, 2].min()) - 0.010                     # 座面の上 = お尻・太ももの裏のいちばん低いところ
+def _back_y(z0, z1):
+    mm = (np.abs(_bv[:, 0]) < 0.20) & (_bv[:, 2] > z0) & (_bv[:, 2] < z1)
+    return float(_bv[mm][:, 1].max()) + 0.012
+SB0 = _back_y(SEAT + 0.04, SEAT + 0.25)                       # 背もたれの前の面（下）
+SB1 = max(_back_y(SEAT + 0.45, SEAT + 0.66), SB0 + 0.02)      # 背もたれの前の面（上）
+HR_Y = _back_y(SEAT + 0.68, SEAT + 1.2) + 0.012               # 頭当ての前の面（頭・髪のうしろ）
+SEAT_INFO = {"cushion_top_z_m": round(SEAT, 4), "back_front_y_bottom_m": round(SB0, 4), "back_front_y_top_m": round(SB1, 4), "headrest_front_y_m": round(HR_Y, 4)}
 for nm, x0 in (("Driver", 0.0), ("Passenger", CX * 2)):
-    box(f"{nm}SeatCushion", x0 - 0.27, x0 + 0.27, float(pel.y) - 0.38, float(pel.y) + 0.14, SEAT - 0.12, SEAT, seat_m)
-    sb = float(pel.y) + 0.17
+    box(f"{nm}SeatCushion", x0 - 0.27, x0 + 0.27, _py - 0.38, SB0, SEAT - 0.12, SEAT, seat_m)
     v = []
-    for zz, yy in ((SEAT - 0.02, sb), (SEAT + 0.68, sb + 0.13)):
+    for zz, yy in ((SEAT - 0.02, SB0 + (SB0 - SB1) * 0.03), (SEAT + 0.68, SB1)):
         for xx in (x0 - 0.26, x0 + 0.26):
             v += [(xx, yy, zz), (xx, yy + 0.10, zz)]
     add_mesh(f"{nm}SeatBack", [v[0], v[2], v[6], v[4], v[1], v[3], v[7], v[5]],
              [(0, 1, 2, 3), (4, 7, 6, 5), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)], seat_m)
-    box(f"{nm}Headrest", x0 - 0.13, x0 + 0.13, sb + 0.12, sb + 0.20, SEAT + 0.72, SEAT + 0.92, seat_m)
+    box(f"{nm}Headrest", x0 - 0.13, x0 + 0.13, HR_Y, HR_Y + 0.08, SEAT + 0.72, SEAT + 0.92, seat_m)
+    box(f"{nm}HeadrestPost", x0 - 0.06, x0 + 0.06, (SB1 + HR_Y) / 2 + 0.03, (SB1 + HR_Y) / 2 + 0.045, SEAT + 0.66, SEAT + 0.73, trim)
 box("Floor", X_R, X_L, dash_far - 0.4, float(pel.y) + 1.0, FLOOR - 0.03, FLOOR, dark)
 box("CenterConsole", CX - 0.10, CX + 0.10, dash_near - 0.05, float(pel.y) + 0.05, FLOOR, SEAT + 0.05, trim)
 # ダッシュボード：横から見た断面（運転者側の面 → 上の面はフロントガラスへ向かって下がる）を車の幅に伸ばし、角を丸める
@@ -297,20 +313,59 @@ for k, vx in enumerate((CX - 0.20, CX + 0.20)):
     for j in range(4):
         zz = vz - 0.021 + j * 0.014
         box(f"VentSlat{k}", vx - 0.048, vx + 0.048, dash_near + 0.004, dash_near + 0.010, zz - 0.002, zz + 0.002, trim)
-# ハンドル：直径約 37 cm（縁の中心の半径 0.17 m）、縁の太さ約 3 cm。中央のパッドと 3 本のスポーク
-rim = [wheel_c + WR * (math.cos(t) * wx_ + math.sin(t) * wy_) for t in np.linspace(0, 2 * math.pi, 96, endpoint=False)]
-tube("WheelRim", rim, RIM_R, principled("WheelGrip", (0.03, 0.03, 0.032), 0.55), closed=True)
-for t in (math.radians(0), math.radians(180), math.radians(270)):       # 3 時・9 時・6 時
-    d_ = math.cos(t) * wx_ + math.sin(t) * wy_
-    p0, p1 = wheel_c + d_ * 0.07 - wheel_n * 0.012, wheel_c + d_ * (WR - 0.012)
-    tube(f"WheelSpoke{int(math.degrees(t))}", [p0, (p0 + p1) / 2 + wheel_n * 0.004, p1], 0.011, trim)
-pad = cylinder_between("WheelPad", wheel_c - wheel_n * 0.035, wheel_c + wheel_n * 0.012, 0.075, dark, 48)
-pbv = pad.modifiers.new("Round", "BEVEL")
-pbv.width, pbv.segments = 0.012, 4
-cylinder_between("SteeringColumn", wheel_c - wheel_n * 0.035, wheel_c - wheel_n * 0.30 - np.array([0, 0, 0.05]), 0.035, dark)
+# ハンドル：OpenGameArt「Steering wheel」（作者 Savino、CC0）の high.obj を読み込み、外径 約 37 cm に縮めて置く。
+# 縁の円・管の太さは読み込んだ形から測り、手の握り（WR, RIM_R）にそのまま使う。前に自分で作った縁・スポーク・パッドは作らない。
+WHEEL_OBJ = os.environ.get("WHEEL_OBJ", os.path.join(HERE, "assets", "steering_wheel_savino_high.obj"))
+WHEEL_OUTER_D = 0.37
+bpy.ops.wm.obj_import(filepath=WHEEL_OBJ, forward_axis="Y", up_axis="Z")      # 座標はファイルのまま
+wheel_obj = [o for o in bpy.context.selected_objects if o.type == "MESH"][0]
+wheel_obj.name = "SteeringWheel_Savino"
+mv = np.array([wheel_obj.matrix_world @ v.co for v in wheel_obj.data.vertices])
+cm = mv - mv.mean(0)
+_, U = np.linalg.eigh(cm.T @ cm)
+n_m = U[:, 0]                                          # いちばん薄い向き = ハンドルの面の法線
+rad = lambda pts, c0: np.linalg.norm((pts - c0) - np.outer((pts - c0) @ n_m, n_m), axis=1)  # noqa: E731
+c_m = mv.mean(0)
+r_all = rad(mv, c_m)
+rim_v = mv[r_all > 0.80 * r_all.max()]                 # 縁の頂点
+c_m = rim_v.mean(0)                                    # 縁の円の中心
+r_rim = rad(rim_v, c_m)
+_e1 = np.cross(n_m, [1.0, 0, 0]) if abs(n_m[0]) < 0.9 else np.cross(n_m, [0, 1.0, 0])
+_e1 /= np.linalg.norm(_e1)
+_e2 = np.cross(n_m, _e1)
+_ang = np.arctan2((rim_v - c_m) @ _e2, (rim_v - c_m) @ _e1)
+_sec = np.floor((_ang + np.pi) / (2 * np.pi) * 72).astype(int)
+_w = [(r_rim[_sec == k].max(), r_rim[_sec == k].min()) for k in range(72) if (_sec == k).sum() >= 3]
+outer_m = float(np.median([o for o, _ in _w]))                # 角度ごとの外側・内側の中央値（スポークの付け根を除く）
+inner_m = float(np.median([i for _, i in _w]))
+hub = mv[r_all < 0.25 * r_all.max()]
+if len(hub) and float(((hub - c_m) @ n_m).mean()) > 0:  # 中央の出っぱり（コラム側）は奥（ダッシュボード側）
+    n_m = -n_m                                         # n_m = 運転者の方
+up_m = np.array([0.0, -1.0, 0.0]) - (np.array([0.0, -1.0, 0.0]) @ n_m) * n_m
+up_m /= np.linalg.norm(up_m)                          # モデルの -Y を 12 時に（太いスポークが下側に来る向き。+Y だと 10 時・2 時の握る所に来る）
+SCALE = WHEEL_OUTER_D / (2 * outer_m)
+M_model = np.stack([np.cross(up_m, n_m), up_m, n_m], 1)
+M_world = np.stack([np.cross(wy_, wheel_n), wy_, wheel_n], 1)
+Rw = M_world @ M_model.T
+Mw = np.eye(4)
+Mw[:3, :3] = Rw * SCALE
+Mw[:3, 3] = wheel_c - Rw @ (c_m * SCALE)
+wheel_obj.matrix_world = Matrix(Mw.tolist())
+wheel_obj.data.materials.clear()
+wheel_obj.data.materials.append(principled("WheelGrip", (0.03, 0.03, 0.032), 0.55))
+for poly in wheel_obj.data.polygons:
+    poly.use_smooth = True
+WR = SCALE * (outer_m + inner_m) / 2                  # 縁の管の中心の半径
+RIM_R = SCALE * (outer_m - inner_m) / 2               # 縁の管の半径
+hub_depth = float(SCALE * max(0.0, -((mv - c_m) @ n_m).min()))
+WHEEL_INFO = {"model": "Steering wheel", "author": "Savino", "url": "https://opengameart.org/content/steering-wheel",
+              "file": "high.obj", "license": "CC0", "scale": round(SCALE, 4), "outer_diameter_m": round(2 * SCALE * outer_m, 4),
+              "rim_center_radius_m": round(WR, 4), "rim_tube_radius_m": round(RIM_R, 4), "depth_behind_rim_m": round(hub_depth, 4)}
+print("WHEEL", WHEEL_INFO)
+cylinder_between("SteeringColumn", wheel_c - wheel_n * max(0.03, hub_depth - 0.01), wheel_c - wheel_n * 0.32 - np.array([0, 0, 0.05]), 0.035, dark)
 # フロントガラス・屋根・柱・運転席のドア
 ws_bot = dash_far + 0.02
-ws_top_y = float(cyc0[1]) - 0.55
+ws_top_y = float(cyc0[1]) - 0.55 - SHIFT_BACK
 add_mesh("Windshield", [(X_R, ws_bot, dash_z - DASH_DROP), (X_L, ws_bot, dash_z - DASH_DROP), (X_L, ws_top_y, ROOF), (X_R, ws_top_y, ROOF)], [(0, 1, 2, 3)], glass)
 box("Roof", X_R - 0.05, X_L + 0.05, ws_top_y, float(pel.y) + 1.0, ROOF, ROOF + 0.04, principled("Headliner", (0.72, 0.70, 0.66), 0.9))
 for xp in (X_R, X_L):
@@ -383,6 +438,33 @@ def rim_dist(p):
     return float(np.linalg.norm(p - q))
 
 
+# ハンドルの表面までの距離（読み込んだモデルの形そのものに対して）
+from mathutils.bvhtree import BVHTree as _BVH  # noqa: E402
+_wv = [wheel_obj.matrix_world @ v.co for v in wheel_obj.data.vertices]
+_wheel_bvh = _BVH.FromPolygons(_wv, [list(pp.vertices) for pp in wheel_obj.data.polygons], all_triangles=False)
+_wv_np = np.array([tuple(v) for v in _wv])
+
+
+def wheel_dist(p):
+    hit = _wheel_bvh.find_nearest(Vector(tuple(map(float, p))))
+    return float(hit[3]) if hit[0] is not None else 1.0
+
+
+def rim_section(rdir):
+    """rdir（ハンドルの中心から外向き）の向きにある縁の断面を、モデルの頂点から測る：断面の中心と半径。"""
+    rel = _wv_np - wheel_c
+    inpl = rel - np.outer(rel @ wheel_n, wheel_n)
+    r_ = np.linalg.norm(inpl, axis=1)
+    cosang = (inpl @ rdir) / np.maximum(r_, 1e-9)
+    sel = (cosang > math.cos(math.radians(5))) & (r_ > 0.6 * WR)
+    pts = _wv_np[sel]
+    rr = pts - wheel_c
+    ca = np.stack([rr @ rdir, rr @ wheel_n], 1)              # 断面の座標（外向き, 運転者向き）
+    cen2 = (ca.max(0) + ca.min(0)) / 2
+    rad_ = float(((ca.max(0) - ca.min(0)) / 2).mean())
+    return wheel_c + rdir * cen2[0] + wheel_n * cen2[1], rad_, (ca.max(0) - ca.min(0)).tolist()
+
+
 # 休みの姿勢での手の形（骨の位置から）：手の長さ方向・親指側・手のひらの向き
 rest = {}
 for s in ("L", "R"):
@@ -403,7 +485,7 @@ grip_pts = {}
 for s, sgn in (("L", 1), ("R", -1)):
     ang = math.radians(60)                                    # 12 時から 60°：左手 10 時、右手 2 時
     rdir = math.cos(ang) * wy_ - sgn * math.sin(ang) * wx_    # 縁の点への向き（ハンドルの中心から外向き）。wx_ は人の右（-X）
-    g = wheel_c + WR * rdir
+    g, RIM_LOC, SEC_WH = rim_section(rdir)                   # 握る所の縁の断面（中心・半径）をモデルから測る
     grip_pts[s] = g
     t = unit(np.cross(wheel_n, rdir))                         # 縁の接線
     sh = bw(f"upperarm01.{s}")
@@ -425,7 +507,7 @@ for s, sgn in (("L", 1), ("R", -1)):
         if p @ (rdir * 0.75 + wheel_n * 0.66) > 0:                         # 手のひらは内側・奥（手の甲が運転者側の外）
             p = -p
         # 縁の管の中心 = 指の付け根の少し手前 + 手のひら側へ（縁の半径 + 手の厚みの半分）
-        W = g - p * (RIM_R + 0.013) - h * (rest[s]["dK"] - 0.012)
+        W = g - p * (RIM_LOC + 0.033) - h * (rest[s]["dK"] - 0.006)        # 手のひらの厚みの半分 + 余裕
     te.location = Vector(tuple(map(float, W)))
     upd()
     # IK を FK に焼き付ける
@@ -455,30 +537,138 @@ for s, sgn in (("L", 1), ("R", -1)):
     curls = {}
     for fi in (2, 3, 4, 5):
         tot = [0.0, 0.0, 0.0]
-        for step in range(40):
-            segs = [f"finger{fi}-{j}.{s}" for j in (1, 2, 3)]
-            dmin = min(rim_dist(T(sg)) for sg in segs[1:]) if step else 1.0
-            dmin = min(dmin, min(rim_dist(P(sg)) for sg in segs[1:]))
-            if step and (dmin < RIM_R + 0.0075 or tot[0] > 95):
-                break
+        segs = [f"finger{fi}-{j}.{s}" for j in (1, 2, 3)]
+        FING_CLEAR = 0.0090                                     # 指の骨（指の中心）とハンドルの表面の距離の下限（指の厚みの半分 + 余裕）
+        dist_now = lambda: min(min(wheel_dist(T(sg)), wheel_dist(P(sg))) for sg in segs[1:])  # noqa: E731
+        for step in range(80):                                  # 2° ずつ曲げ、近づきすぎたら 1 段戻して止める
+            moved = False
             for j, wgt in ((0, 1.0), (1, 1.15), (2, 0.8)):
                 if tot[j] < (95, 105, 75)[j]:
-                    rot_world(segs[j], k, 3.0 * wgt)
-                    tot[j] += 3.0 * wgt
+                    rot_world(segs[j], k, 2.0 * wgt)
+                    tot[j] += 2.0 * wgt
+                    moved = True
+            if not moved:
+                break
+            if dist_now() < FING_CLEAR:
+                for j, wgt in ((2, 0.8), (1, 1.15), (0, 1.0)):
+                    rot_world(segs[j], k, -2.0 * wgt)
+                    tot[j] -= 2.0 * wgt
+                break
         curls[f"finger{fi}"] = [round(x, 1) for x in tot]
     # 親指：縁の運転者側に沿わせる（付け根を縁の方へ少し寄せ、先は軽く伸ばす）
-    rot_world(f"finger1-1.{s}", k, 12)
-    rot_world(f"finger1-2.{s}", k, 8)
-    tips = {fi: round(rim_dist(T(f"finger{fi}-3.{s}")) * 1000, 1) for fi in (2, 3, 4, 5)}
+    # 親指：縁の運転者側に沿わせて軽く伸ばす。表面から 9.5 mm より近い間は、付け根・真ん中を 2° ずつ縁から離す（最大 30°）
+    thumb_dist = lambda: min(min(wheel_dist(T(f"finger1-{j}.{s}")), wheel_dist(P(f"finger1-{j}.{s}"))) for j in (1, 2, 3))  # noqa: E731
+    thumb_open = 0.0
+    while thumb_dist() < 0.0085 and thumb_open < 30:
+        rot_world(f"finger1-1.{s}", k, -2.0)
+        rot_world(f"finger1-2.{s}", k, -1.0)
+        thumb_open += 2.0
+    tips = {fi: round(wheel_dist(T(f"finger{fi}-3.{s}")) * 1000, 1) for fi in (2, 3, 4, 5)}
     palm_c = (P(f"finger3-1.{s}") + P(f"wrist.{s}")) / 2
     HAND_LOG[s] = {"grip_point_m": [round(float(x), 4) for x in g], "clock": "10 時" if s == "L" else "2 時",
                    "wrist_bend_deg(forearm_vs_hand)": round(bend, 1), "forearm_twist_deg_total": round(math.degrees(twist), 1),
                    "forearm_twist_split": "lowerarm01 と lowerarm02 に半分ずつ", "finger_curl_deg_[base,middle,tip]": curls,
-                   "fingertip_to_rim_axis_mm": tips, "rim_tube_radius_mm": RIM_R * 1000,
-                   "knuckle_to_rim_axis_mm": round(rim_dist(P(f"finger3-1.{s}")) * 1000, 1),
-                   "palm_center_to_rim_axis_mm": round(rim_dist(palm_c) * 1000, 1),
+                   "fingertip_bone_to_wheel_surface_mm": tips, "thumb_opened_deg": thumb_open, "thumb_bone_to_wheel_surface_mm": round(thumb_dist() * 1000, 1), "rim_section_at_grip_mm[outward,toward_driver]": [round(x * 1000, 1) for x in SEC_WH],
+                   "knuckle_bone_to_wheel_surface_mm": round(wheel_dist(P(f"finger3-1.{s}")) * 1000, 1),
+                   "palm_center_to_wheel_surface_mm": round(wheel_dist(palm_c) * 1000, 1),
                    "elbow_m": [round(float(x), 3) for x in P(f"lowerarm01.{s}")], "shoulder_m": [round(float(x), 3) for x in P(f"upperarm01.{s}")]}
     print("HAND", s, json.dumps(HAND_LOG[s], ensure_ascii=False))
+
+# ---------------------------------------------------------------- めり込みの確認（三角形どうしの交差を BVH で数える）
+from mathutils.bvhtree import BVHTree  # noqa: E402
+
+
+def bvh_of(objs):
+    dg = bpy.context.evaluated_depsgraph_get()
+    verts, polys = [], []
+    for ob in objs:
+        ev = ob.evaluated_get(dg)
+        me = ev.to_mesh()
+        mw = ev.matrix_world
+        base = len(verts)
+        verts += [mw @ v.co for v in me.vertices]
+        polys += [[base + i for i in p.vertices] for p in me.polygons]
+        ev.to_mesh_clear()
+    bvh_of.last_polys = polys
+    return BVHTree.FromPolygons(verts, polys, all_triangles=False), verts
+
+
+def human_parts(names):
+    return [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("Human") and o.visible_get() and any(n in o.name for n in names)]
+
+
+def min_dist(verts_a, bvh_b):
+    best = 1e9
+    for v in verts_a:
+        hit = bvh_b.find_nearest(v)
+        if hit[0] is not None:
+            best = min(best, hit[3])
+    return best
+
+
+def interference_report():
+    upd()
+    wheel_b, wheel_v = bvh_of([wheel_obj])
+    body = [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("Human") and o.visible_get()]
+    body_b, body_v = bvh_of(body)
+    dash_objs = [bpy.data.objects[n] for n in ("Dashboard", "InstrumentPod", "InstrumentHood", "DashLower") if n in bpy.data.objects]
+    dash_b, _ = bvh_of(dash_objs)
+    seat_objs = [bpy.data.objects[n] for n in ("DriverSeatCushion", "DriverSeatBack", "DriverHeadrest")]
+    seat_b, _ = bvh_of(seat_objs)
+    # 太もも：体のうち、腰より前・ハンドルより下の頂点
+    hipy = float(bw("root").y)
+    # 手：手首より先の頂点（手首の骨の位置からの距離 < 0.2 m）
+    wl, wr = Vector(tuple(P("wrist.L"))), Vector(tuple(P("wrist.R")))
+    el, er = Vector(tuple(P("lowerarm01.L"))), Vector(tuple(P("lowerarm01.R")))
+    near_arm = lambda v: min((v - wl).length, (v - wr).length) < 0.22 or min((v - el).length, (v - er).length) < 0.20  # noqa: E731
+    thigh_v = [v for v in body_v if v.y < hipy - 0.10 and v.z < wheel_c[2] + 0.05 and abs(v.x) < 0.35 and not near_arm(v)]
+    hand_v = [v for v in body_v if (v - wl).length < 0.20 or (v - wr).length < 0.20]
+    body_b, body_v = bvh_of(body)
+    body_polys = bvh_of.last_polys
+    pairs = wheel_b.overlap(body_b)
+    cls = {"hand": 0, "thigh": 0, "other": 0}
+    for _, ib in pairs:
+        cen = sum((body_v[i] for i in body_polys[ib]), Vector()) / len(body_polys[ib])
+        if (cen - wl).length < 0.20 or (cen - wr).length < 0.20:
+            cls["hand"] += 1
+        elif cen.y < hipy - 0.10:
+            cls["thigh"] += 1
+        else:
+            cls["other"] += 1
+    # 手の交差が、どの骨のまわりで起きているか
+    hand_bones = [f"{n}.{sd}" for sd in "LR" for n in ["wrist", "metacarpal1", "metacarpal2", "metacarpal3", "metacarpal4"] +
+                  [f"finger{fi}-{j}" for fi in range(1, 6) for j in (1, 2, 3)]]
+    segs_ = [(n, Vector(tuple(P(n))), Vector(tuple(T(n)))) for n in hand_bones]
+    by_bone = {}
+    for _, ib in pairs:
+        cen = sum((body_v[i] for i in body_polys[ib]), Vector()) / len(body_polys[ib])
+        if not ((cen - wl).length < 0.20 or (cen - wr).length < 0.20):
+            continue
+        best, bn = 1e9, None
+        for n, h0, t0 in segs_:
+            d = t0 - h0
+            tt = max(0.0, min(1.0, (cen - h0).dot(d) / max(d.length_squared, 1e-12)))
+            dd = (cen - (h0 + d * tt)).length
+            if dd < best:
+                best, bn = dd, n
+        by_bone[bn] = by_bone.get(bn, 0) + 1
+    rep_bones = dict(sorted(by_bone.items(), key=lambda kv: -kv[1]))
+    rep = {
+        "hand_intersections_by_nearest_bone": rep_bones,
+        "wheel_x_body_triangle_pairs": cls,
+        "wheel_x_dashboard_triangle_pairs": len(wheel_b.overlap(dash_b)),
+        "body_x_driver_seat_triangle_pairs": len(body_b.overlap(seat_b)),
+        "wheel_to_thigh_min_distance_mm": round(min_dist(thigh_v, wheel_b) * 1000, 1) if thigh_v else None,
+        "wheel_to_dashboard_min_distance_mm": round(min_dist(wheel_v[::4], dash_b) * 1000, 1),
+        "hand_to_wheel_min_distance_mm": round(min_dist(hand_v, wheel_b) * 1000, 1) if hand_v else None,
+    }
+    # 手と縁の交差は、指・手のひらがハンドルの面に触れている分も数える（指の先・腹が縁の表面に触れると 0 mm）
+    rep["note"] = "triangle_pairs = 交差している三角形の組の数（0 ならめり込みなし）。手は縁を握るので、手と縁は数 mm まで近づく"
+    return rep
+
+
+INTERF = interference_report()
+print("INTERF", json.dumps(INTERF, ensure_ascii=False))
 
 # ---------------------------------------------------------------- 目を前の道路へ（自車線の 25 m 先）
 a = np.array([0.15, float(cyc0[1]) - 25.0, gz + 0.02])
@@ -666,12 +856,12 @@ info = {
     "camera": {"view": "助手席側から運転者を見る", "location_world_m": vec(pos), "look_at_world_m": vec(look), "lens_mm": 20, "sensor_width_mm": 36,
                "hidden_for_view": ["助手席の背もたれと頭当て（視点の手前にあるため描いていない）"]},
     "image_px": {"eyes": px(cyc), "front_camera": px(fc), "back_camera": px(bc)},
-    "hands": HAND_LOG, "hand_check_images": check_imgs,
+    "hands": HAND_LOG, "hand_check_images": check_imgs, "steering_wheel_model": WHEEL_INFO, "interference_check": INTERF, "driver_seat_from_body": SEAT_INFO, "person_and_seat_shift_m": {"back": SHIFT_BACK, "down": SHIFT_DOWN},
     "changes_v2": {
         "arms_and_hands": ["腕：IK（chain 4 = upperarm01, upperarm02, lowerarm01, lowerarm02）で手首を置き、肘のポールターゲットを肘の下・外側に置いた。そのあと FK に焼き付けて IK は外した。肩（clavicle, shoulder01）は動かしていない",
                            "手の向き：手の長さ方向は前腕の向きから縁の接線方向の成分を 6 割除いたもの（手首の曲がりを小さく。縁は手のひらを少し斜めに横切る）。手のひらは縁（ハンドルの内側・奥）へ、手の甲は運転者側の外向き。縁の管の中心は指の付け根の手のひら側",
                            "前腕のねじれ：手首の骨の軸まわりのねじれを lowerarm01 と lowerarm02 に半分ずつ入れ、wrist には残りの振りだけを入れた",
-                           "指：4 本の指（finger2〜5）の付け根・真ん中・先の 3 関節を、手のひら側へ 3° ずつ（比 1 : 1.15 : 0.8）曲げ、指の関節・指先が縁の管の表面から 7.5 mm（縁の半径 + 指の厚みの半分）に近づいたところで止めた",
+                           "指：4 本の指（finger2〜5）の付け根・真ん中・先の 3 関節を、手のひら側へ 3° ずつ（比 1 : 1.15 : 0.8）曲げ、2° ずつ曲げ、指の骨（指の中心）が読み込んだハンドルの表面から 9.5 mm より近づいたら 1 段戻して止めた。手を置く位置は、握る所の縁の断面をモデルの頂点から測って決めた",
                            "親指：縁の運転者側に沿わせ、付け根 12°・真ん中 8° だけ曲げて軽く伸ばした"],
         "interior_added": ["ハンドル：縁の中心の半径 0.17 m（外径 約 37 cm）、縁の太さ 3 cm、中央のパッド、3 時・9 時・6 時のスポーク 3 本。面は運転者側へ傾けたまま",
                            "メーター：ハンドルの奥にひさし付きのメーターの台と、丸いメーター 2 つ（目盛り・針付き）",

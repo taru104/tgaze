@@ -64,3 +64,11 @@ v2 で直したこと
   指先が縁の表面から 7.5 mm の距離で止めた（指先と縁の管の中心の距離 20〜29 mm、縁の半径 15 mm）。親指は縁の運転者側に沿わせた
 - 車内：ハンドル（外径 約 37 cm、縁の太さ 3 cm、中央のパッド、スポーク 3 本）、ひさし付きのメーターの台と丸いメーター 2 つ、
   上の面がフロントガラスへ下がる角の丸いダッシュボード、送風口 2 つ、電源の切れた黒い画面、front / back camera を 4×3×3 cm の箱＋丸いレンズに
+
+### v3：ハンドルを既存のモデルに置き換え
+
+- 使ったモデル：OpenGameArt「Steering wheel」（作者 Savino、CC0）の high.obj。外径 37 cm に縮めて置いた（`src/assets/steering_wheel_savino_high.obj`）
+- 試したが使わなかったもの（理由は JSON の `model_selection`）：「Car」（Creomoto、CC0。内装なし）、「Ultimate 3D Car Assets Pack」（Lyricsz、CC0。座席が箱だけで、ハンドル・ダッシュボードなし）、ほか CC0 でないもの
+- めり込みの確認（BVH で三角形の交差を数えた）：ハンドルと太もも 0、ハンドルとダッシュボード 0、手とハンドル 0、体と座席 0
+- `driving_passenger_view_preview960_v3.png` / `.json`、`driving_hands_check_passenger_v3.png`、`driving_hands_check_top_v3.png`
+- 落としたモデルを調べた道具：`src/inspect_blend.py`（中身の一覧）、`src/peek_blend.py`・`src/peek_pack.py`（屋根を切った絵）。どれも .blend の中のスクリプトは実行しない読み方

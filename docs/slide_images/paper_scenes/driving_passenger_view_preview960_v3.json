@@ -1,0 +1,375 @@
+{
+ "note": "論文の撮り方を 3DCG で再現したイメージ。論文の図の写しではない。学習には使っていない（学習データの生成・学習はしていない）",
+ "paper": {
+  "name": "（未確定）運転中の視線データの撮り方",
+  "reproduced_from": "依頼文に書かれた撮り方（左ハンドルの車内、頭に着ける視線計測器とカメラ、車のカメラ 2 台）。元の論文は未確定のため、車のカメラの向きは仮（front = 道路向き、back = 運転者向き）"
+ },
+ "image": "driving_passenger_view_preview960_v3.png",
+ "size_px": [
+  960,
+  540
+ ],
+ "origin": "top-left, x right, y down",
+ "nogear_version": false,
+ "person": {
+  "generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3) + clothes + shoes; seated by rotating leg / spine bones; hands on the wheel by Blender IK",
+  "identity": 250,
+  "appearance": {
+   "sex_for_appearance": "female",
+   "race_for_appearance": "caucasian",
+   "skin": "young_caucasian_female",
+   "hair": "short02",
+   "iris": "lightblue"
+  },
+  "clothes": "female_casualsuit02",
+  "shoes": "shoes02",
+  "pose": "運転席に座り、ハンドルを 10 時と 2 時で握る"
+ },
+ "gaze": {
+  "target": "前の道路（自車線、約 25 m 先）",
+  "target_world_m": [
+   0.15,
+   -25.0375,
+   0.2867
+  ],
+  "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik",
+  "residual_deg": {
+   "left": 0.0004,
+   "right": 0.0005
+  },
+  "eye_center_world_m": {
+   "left": [
+    0.0285,
+    -0.0375,
+    1.5157
+   ],
+   "right": [
+    -0.0285,
+    -0.0375,
+    1.5157
+   ]
+  }
+ },
+ "gear": {
+  "front_camera": {
+   "location_world_m": [
+    -0.37,
+    -1.0617,
+    1.1471
+   ],
+   "direction": [
+    0,
+    -1,
+    0
+   ],
+   "where": "フロントガラスの下の中央",
+   "facing": "道路（仮）"
+  },
+  "back_camera": {
+   "location_world_m": [
+    -0.3699,
+    -0.5912,
+    1.3333
+   ],
+   "direction": [
+    0.5357,
+    0.802,
+    0.2642
+   ],
+   "where": "ダッシュボード中央の画面の上",
+   "facing": "運転者（仮）"
+  },
+  "head_eye_tracker": {
+   "parts": "頭を一周するバンド、額のカメラ（前向き）、こめかみから伸びるアームの先の目を撮るカメラ（左右）"
+  }
+ },
+ "car": {
+  "drive": "左ハンドル（運転席は車の左、助手席は運転者の右 = -X）",
+  "car_center_x_m": -0.37,
+  "steering_wheel_center_m": [
+   0.0,
+   -0.4417,
+   1.0817
+  ],
+  "steering_wheel_radius_m": 0.17310280008399848,
+  "center_screen_m": [
+   -0.37,
+   -0.5917,
+   1.2317
+  ],
+  "world_axes": "運転者は -Y（前）を向く。運転者の右 = -X、上 = +Z"
+ },
+ "camera": {
+  "view": "助手席側から運転者を見る",
+  "location_world_m": [
+   -0.69,
+   0.2825,
+   1.5357
+  ],
+  "look_at_world_m": [
+   0.02,
+   -0.3575,
+   1.3457
+  ],
+  "lens_mm": 20,
+  "sensor_width_mm": 36,
+  "hidden_for_view": [
+   "助手席の背もたれと頭当て（視点の手前にあるため描いていない）"
+  ]
+ },
+ "image_px": {
+  "eyes": [
+   313.1,
+   179.2
+  ],
+  "front_camera": [
+   831.0,
+   341.3
+  ],
+  "back_camera": [
+   753.9,
+   294.0
+  ]
+ },
+ "hands": {
+  "L": {
+   "grip_point_m": [
+    0.1318,
+    -0.4946,
+    1.1398
+   ],
+   "clock": "10 時",
+   "wrist_bend_deg(forearm_vs_hand)": 8.9,
+   "forearm_twist_deg_total": 4.1,
+   "forearm_twist_split": "lowerarm01 と lowerarm02 に半分ずつ",
+   "finger_curl_deg_[base,middle,tip]": {
+    "finger2": [
+     28.0,
+     32.2,
+     22.4
+    ],
+    "finger3": [
+     28.0,
+     32.2,
+     22.4
+    ],
+    "finger4": [
+     28.0,
+     32.2,
+     22.4
+    ],
+    "finger5": [
+     22.0,
+     25.3,
+     17.6
+    ]
+   },
+   "fingertip_bone_to_wheel_surface_mm": {
+    "2": 9.7,
+    "3": 12.5,
+    "4": 11.3,
+    "5": 10.4
+   },
+   "thumb_opened_deg": 22.0,
+   "thumb_bone_to_wheel_surface_mm": 10.4,
+   "rim_section_at_grip_mm[outward,toward_driver]": [
+    92.6,
+    82.8
+   ],
+   "knuckle_bone_to_wheel_surface_mm": 32.1,
+   "palm_center_to_wheel_surface_mm": 33.8,
+   "elbow_m": [
+    0.178,
+    -0.193,
+    1.242
+   ],
+   "shoulder_m": [
+    0.162,
+    0.038,
+    1.294
+   ]
+  },
+  "R": {
+   "grip_point_m": [
+    -0.1318,
+    -0.4946,
+    1.1398
+   ],
+   "clock": "2 時",
+   "wrist_bend_deg(forearm_vs_hand)": 8.9,
+   "forearm_twist_deg_total": -4.1,
+   "forearm_twist_split": "lowerarm01 と lowerarm02 に半分ずつ",
+   "finger_curl_deg_[base,middle,tip]": {
+    "finger2": [
+     28.0,
+     32.2,
+     22.4
+    ],
+    "finger3": [
+     28.0,
+     32.2,
+     22.4
+    ],
+    "finger4": [
+     28.0,
+     32.2,
+     22.4
+    ],
+    "finger5": [
+     22.0,
+     25.3,
+     17.6
+    ]
+   },
+   "fingertip_bone_to_wheel_surface_mm": {
+    "2": 9.7,
+    "3": 12.5,
+    "4": 11.3,
+    "5": 10.4
+   },
+   "thumb_opened_deg": 22.0,
+   "thumb_bone_to_wheel_surface_mm": 10.4,
+   "rim_section_at_grip_mm[outward,toward_driver]": [
+    92.6,
+    82.8
+   ],
+   "knuckle_bone_to_wheel_surface_mm": 32.1,
+   "palm_center_to_wheel_surface_mm": 33.8,
+   "elbow_m": [
+    -0.178,
+    -0.193,
+    1.242
+   ],
+   "shoulder_m": [
+    -0.162,
+    0.038,
+    1.294
+   ]
+  }
+ },
+ "hand_check_images": {
+  "passenger": {
+   "image": "driving_hands_check_passenger_v3.png"
+  },
+  "top": {
+   "image": "driving_hands_check_top_v3.png"
+  }
+ },
+ "steering_wheel_model": {
+  "model": "Steering wheel",
+  "author": "Savino",
+  "url": "https://opengameart.org/content/steering-wheel",
+  "file": "high.obj",
+  "license": "CC0",
+  "scale": 0.7686,
+  "outer_diameter_m": 0.37,
+  "rim_center_radius_m": 0.1731,
+  "rim_tube_radius_m": 0.0119,
+  "depth_behind_rim_m": 0.1172
+ },
+ "interference_check": {
+  "hand_intersections_by_nearest_bone": {},
+  "wheel_x_body_triangle_pairs": {
+   "hand": 0,
+   "thigh": 0,
+   "other": 0
+  },
+  "wheel_x_dashboard_triangle_pairs": 0,
+  "body_x_driver_seat_triangle_pairs": 0,
+  "wheel_to_thigh_min_distance_mm": 19.5,
+  "wheel_to_dashboard_min_distance_mm": 35.8,
+  "hand_to_wheel_min_distance_mm": 1.7,
+  "note": "triangle_pairs = 交差している三角形の組の数（0 ならめり込みなし）。手は縁を握るので、手と縁は数 mm まで近づく"
+ },
+ "driver_seat_from_body": {
+  "cushion_top_z_m": 0.7356,
+  "back_front_y_bottom_m": 0.1067,
+  "back_front_y_top_m": 0.1434,
+  "headrest_front_y_m": 0.1504
+ },
+ "person_and_seat_shift_m": {
+  "back": 0.05,
+  "down": 0.07
+ },
+ "changes_v2": {
+  "arms_and_hands": [
+   "腕：IK（chain 4 = upperarm01, upperarm02, lowerarm01, lowerarm02）で手首を置き、肘のポールターゲットを肘の下・外側に置いた。そのあと FK に焼き付けて IK は外した。肩（clavicle, shoulder01）は動かしていない",
+   "手の向き：手の長さ方向は前腕の向きから縁の接線方向の成分を 6 割除いたもの（手首の曲がりを小さく。縁は手のひらを少し斜めに横切る）。手のひらは縁（ハンドルの内側・奥）へ、手の甲は運転者側の外向き。縁の管の中心は指の付け根の手のひら側",
+   "前腕のねじれ：手首の骨の軸まわりのねじれを lowerarm01 と lowerarm02 に半分ずつ入れ、wrist には残りの振りだけを入れた",
+   "指：4 本の指（finger2〜5）の付け根・真ん中・先の 3 関節を、手のひら側へ 3° ずつ（比 1 : 1.15 : 0.8）曲げ、2° ずつ曲げ、指の骨（指の中心）が読み込んだハンドルの表面から 9.5 mm より近づいたら 1 段戻して止めた。手を置く位置は、握る所の縁の断面をモデルの頂点から測って決めた",
+   "親指：縁の運転者側に沿わせ、付け根 12°・真ん中 8° だけ曲げて軽く伸ばした"
+  ],
+  "interior_added": [
+   "ハンドル：縁の中心の半径 0.17 m（外径 約 37 cm）、縁の太さ 3 cm、中央のパッド、3 時・9 時・6 時のスポーク 3 本。面は運転者側へ傾けたまま",
+   "メーター：ハンドルの奥にひさし付きのメーターの台と、丸いメーター 2 つ（目盛り・針付き）",
+   "ダッシュボード：上の面をフロントガラスへ向かって 10 cm 下げ、角を丸めた（ベベル）。中央の画面の左右に送風口 2 つ",
+   "真ん中の画面：電源の切れた黒い画面（何も映さない）",
+   "運転席の背もたれと頭当て（前の版から付いている。形は変えていない）",
+   "front / back camera：4×3×3 cm の明るいグレーの箱に丸いレンズ（金属の輪付き）。置き場所と向きは前の版と同じ（front はダッシュボードの上の面が下がったぶん、上の面に載るように高さだけ合わせた）"
+  ]
+ },
+ "render": {
+  "engine": "CYCLES",
+  "device": "GPU",
+  "samples": 128,
+  "denoise": true,
+  "view_transform": "Standard"
+ },
+ "model_selection": {
+  "used": {
+   "part": "ハンドルだけ置き換え（候補 3）",
+   "model": "Steering wheel",
+   "author": "Savino",
+   "url": "https://opengameart.org/content/steering-wheel",
+   "file": "high.obj（1404 頂点、ロゴ・文字なし）",
+   "license": "CC0（ページの表示で確認）",
+   "copy_in_repo": "src/assets/steering_wheel_savino_high.obj"
+  },
+  "rejected": [
+   {
+    "model": "Car",
+    "author": "Creomoto",
+    "url": "https://opengameart.org/content/car-0",
+    "license": "CC0",
+    "file": "car.blend（car_0.blend）",
+    "reason": "中身は車体 1 つ（2350 頂点）とタイヤ 1 つだけ。座席・ハンドル・ダッシュボードがない（屋根を切った絵でも車内は平らな面）"
+   },
+   {
+    "model": "Ultimate 3D Car Assets Pack (w Interiors and Animations)",
+    "author": "Lyricsz",
+    "url": "https://opengameart.org/content/ultimate-3d-car-assets-pack-w-interiors-and-animations",
+    "license": "CC0",
+    "reason": "20 台とも 300〜800 頂点の簡単な形で、内装は箱の座席だけ。ハンドル・メーターのあるダッシュボードがない（左右どちらのハンドルかも分からない）"
+   },
+   {
+    "model": "Rigged Car",
+    "author": "eracoon",
+    "url": "https://opengameart.org/content/rigged-car",
+    "license": "CC-BY 3.0",
+    "reason": "CC0 でない"
+   },
+   {
+    "model": "Military van",
+    "author": "johndh",
+    "url": "https://opengameart.org/content/military-van",
+    "license": "CC-BY-SA 3.0 / GPL",
+    "reason": "CC0 でない"
+   },
+   {
+    "model": "3D Bus",
+    "author": "ajanhallinta",
+    "url": "https://opengameart.org/content/3d-bus",
+    "license": "CC0",
+    "reason": "内装なし（ページに明記）"
+   }
+  ],
+  "search": "OpenGameArt の 3D Art を「car interior」「car steering」「vehicle interior」「car dashboard」「cockpit car」で検索（2026-11-21）"
+ },
+ "changes_v3": [
+  "ハンドルを Savino の high.obj に置き換え。外径 0.37 m に縮め（倍率 0.7686）、太いスポークが下に来る向き（モデルの -Y を 12 時）にした。前に自分で作った縁・スポーク・パッドは消した。コラムはモデルの奥から伸ばし直した",
+  "手は前回と同じ握り方（左手 10 時・右手 2 時、手のひらで縁を包む、手の甲は運転者側の外向き）。手を置く位置は、握る所の縁の断面をモデルの頂点から測って決め、指はモデルの表面までの距離を見ながら 2° ずつ曲げて 9 mm で止めた。親指は表面から 8.5 mm より近い間だけ縁から離した",
+  "めり込みを直すため、運転者と座席・床を、ハンドル・ダッシュボード・フロントガラス・屋根に対して うしろへ 5 cm、下へ 7 cm 動かした（太ももとハンドル）",
+  "運転席の座面・背もたれ・頭当ての面を、座った体（服・髪を含む）の形から決めた（体と座席）",
+  "front / back camera は前と同じ場所（車に対して）・向き・大きさ（4×3×3 cm）で置き直した"
+ ]
+}
