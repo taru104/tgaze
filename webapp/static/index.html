@@ -180,8 +180,7 @@
       </div>
       <p class="note">平均誤差は、9点のうち1点を除いて学習し、除いた点を予測したときのずれの平均です（leave-one-point-out）。</p>
     </div>
-    <div class="actions two"><a class="btn ghost" href="#/ready">再キャリブレーション</a><a class="btn primary" href="#/measure">計測を開始 →</a></div>
-    <div class="actions"><button class="btn ghost" id="btnGameDone">◎ ターゲットゲームで試す</button><button class="btn ghost" id="btnKbDone">⌨ 視線キーボードで試す</button></div>
+    <div class="actions two"><a class="btn ghost" href="#/ready">再キャリブレーション</a><a class="btn primary" href="#/apps" id="btnToApps">体験するアプリを選ぶ →</a></div>
   </div>
 </section>
 
@@ -215,6 +214,58 @@
   <div class="kb-grid" id="kbGrid"></div>
   <div class="game-dot" id="kbDot" hidden></div>
   <div class="kb-msg" id="kbMsg">キーを見つめると選べます（Esc で終了）</div>
+</section>
+
+<!-- アプリを選ぶ（キャリブレーションのあと。体験が終わったら、キャリブレーションを残したままここへ戻る） -->
+<section class="page narrow" id="page-apps" hidden>
+  <div class="apps">
+    <h2>体験するアプリを選んでください</h2>
+    <p class="lead" id="appsCalib">キャリブレーション済み</p>
+    <div class="app-grid">
+      <button class="app-card" id="btnGameDone"><span class="app-icon">◎</span><b>ターゲットゲーム</b><small>画面に出るターゲットを見つめて消す</small></button>
+      <button class="app-card" id="btnKbDone"><span class="app-icon">⌨</span><b>視線キーボード</b><small>キーを見つめて文字を入力する</small></button>
+      <a class="app-card" href="#/measure"><span class="app-icon">🛒</span><b>EC サイトのデモ</b><small>どこをどれだけ見たかを計測・分析する</small></a>
+      <button class="app-card" id="btnCook"><span class="app-icon">🍳</span><b>調理補助</b><small>手を使わずに、視線でレシピを読み進める</small></button>
+    </div>
+    <p class="note">どのアプリも Esc で終わり、この画面に戻ります（キャリブレーションはそのまま使えます）。EC サイトのデモは「✕ 終了」で結果の画面へ進み、そこからこの画面に戻れます。</p>
+    <div class="actions"><a class="btn ghost" href="#/ready">再キャリブレーション</a></div>
+  </div>
+</section>
+
+<!-- 調理補助：手を使わずにレシピを読み進める（eyeCOOK の考え方：料理中の人の視線に合わせて、作業を邪魔せずに手伝う） -->
+<section class="cook" id="page-cook" hidden>
+  <div class="cook-main">
+    <div class="cook-zone up" id="cookUp"><span>▲ 見ると上へ</span></div>
+    <div class="cook-scroll" id="cookScroll">
+      <header class="cook-title"><small>レシピ</small><h1 id="cookName"></h1><p id="cookLead"></p></header>
+      <ol class="cook-steps" id="cookSteps"></ol>
+      <div class="cook-end">できあがり！ 🍽</div>
+    </div>
+    <div class="cook-zone down" id="cookDown"><span>▼ 見ると下へ</span></div>
+  </div>
+  <aside class="cook-side">
+    <button class="cook-btn back" id="cookMenu" data-dwell="1500"><i class="fill"></i>← メニューへ</button>
+    <div class="cook-box">
+      <b>材料（2人分）</b>
+      <ul class="cook-ing" id="cookIng"></ul>
+    </div>
+    <div class="cook-box">
+      <b>タイマー</b>
+      <div class="cook-timer" id="cookTimer">–</div>
+      <small id="cookTimerNote">手順の「⏱」を見つめると始まります</small>
+    </div>
+    <div class="cook-nav">
+      <button class="cook-btn" id="cookPrev" data-dwell="1000"><i class="fill"></i>◀ 前の手順</button>
+      <button class="cook-btn primary" id="cookNext" data-dwell="1000"><i class="fill"></i>次の手順 ▶</button>
+    </div>
+    <button class="cook-btn" id="cookSpeak" data-dwell="1200"><i class="fill"></i><span id="cookSpeakLabel">🔈 読み上げ：オフ</span></button>
+    <div class="cook-info" id="cookInfo"></div>
+  </aside>
+  <div class="cook-away" id="cookAway" hidden>
+    <div><b>おかえりなさい</b><span id="cookAwayMsg"></span></div>
+  </div>
+  <div class="game-dot" id="cookDot" hidden></div>
+  <div class="cook-msg" id="cookMsg">上・下の帯を見るとスクロール、ボタンは見つめると押せます（Esc でメニューへ）</div>
 </section>
 
 <!-- ⑦ リアルタイム計測 -->
@@ -294,6 +345,7 @@
       <h2 id="rTitle">サマリー</h2>
       <select id="sessionSel"></select>
       <button class="btn ghost sm" id="btnCsv">⇩ CSV出力</button>
+      <a class="btn primary sm" id="btnResultsApps" href="#/apps" hidden>アプリの選択に戻る</a>
     </div>
     <div id="rEmpty" class="empty" hidden>まだ計測データがありません。<a href="#/check">計測を始める →</a></div>
     <div id="rBody">

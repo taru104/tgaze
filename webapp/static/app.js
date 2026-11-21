@@ -102,8 +102,8 @@ async function enterFs() { try { if (!isFs()) await document.documentElement.req
 async function exitFs() { try { if (isFs()) await document.exitFullscreen(); } catch (e) { /* noop */ } }
 
 // ── ルーティング ─────────────────────────────
-const PAGES = ["home", "check", "guide", "ready", "calib", "done", "measure", "results", "game", "keyboard"];
-const STEP_OF = { check: 1, guide: 2, ready: 3, calib: 3, done: 4 };
+const PAGES = ["home", "check", "guide", "ready", "calib", "done", "measure", "results", "game", "keyboard", "apps", "cook"];
+const STEP_OF = { check: 1, guide: 2, ready: 3, calib: 3, done: 4, apps: 4 };
 let current = null;
 
 function route() {
@@ -113,7 +113,7 @@ function route() {
   current = page;
   PAGES.forEach((p) => { $("#page-" + p).hidden = p !== page; });
   const step = STEP_OF[page];
-  $("#topbar").hidden = page === "calib" || page === "game" || page === "keyboard";
+  $("#topbar").hidden = page === "calib" || page === "game" || page === "keyboard" || page === "cook";
   $("#steps").hidden = !step;
   $$("#steps li").forEach((li) => {
     const s = +li.dataset.step;
@@ -222,7 +222,8 @@ document.addEventListener("fullscreenchange", () => {
   }
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && current === "calib") { calibAbort = true; location.hash = "#/guide"; } });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (current === "game" || current === "keyboard")) location.hash = state.calibrated ? "#/done" : "#/ready"; });
+// ゲーム・キーボード・調理補助は Esc で「アプリを選ぶ」画面へ戻る（キャリブレーションはそのまま）
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (current === "game" || current === "keyboard" || current === "cook")) backToApps(); });
 
 // ── ⑥ 完了 ─────────────────────────────
 ENTER.done = () => {
@@ -234,7 +235,7 @@ ENTER.done = () => {
   $("#doneTitle").textContent = ok ? "キャリブレーションが完了しました！" : "キャリブレーションできませんでした";
   $("#doneLead").innerHTML = ok ? "視線の推定が可能になりました。<br>精度を確認し、必要に応じて再調整してください。"
     : "顔が検出できたフレームが足りませんでした。明るさと顔の位置を確認して、もう一度お試しください。";
-  $('#page-done a[href="#/measure"]').hidden = !ok;
+  $("#btnToApps").hidden = !ok;
   if (!ok) { $("#doneErr").textContent = "–"; $("#doneErrSub").textContent = ""; $("#donePts").textContent = "–"; $("#doneStab").textContent = "–"; return; }
   const [w, h] = screenCm();
   const cm = Math.hypot(c.loo_x * w, c.loo_y * h);
@@ -372,6 +373,7 @@ let tab = "summary";
 $$(".side a").forEach((a) => a.addEventListener("click", () => { tab = a.dataset.tab; renderResults(); }));
 $("#sessionSel").addEventListener("change", renderResults);
 ENTER.results = () => {
+  $("#btnResultsApps").hidden = !(state.calibrated || state.info.zero_shot);
   const all = loadSessions();
   $("#sessionSel").innerHTML = all.map((s, i) => `<option value="${i}">${new Date(s.date).toLocaleString("ja-JP")}（${fmt(s.dur)}）</option>`).reverse().join("");
   renderResults();
@@ -654,6 +656,196 @@ ENTER.keyboard = async () => {
   });
 };
 LEAVE.keyboard = () => { stopLoop(); exitFs(); };
+
+// ── アプリを選ぶ画面 ─────────────────────────────
+// キャリブレーションのあとに来る。各アプリは終わったらここへ戻る（サーバのキャリブレーションはそのまま残る）。
+ENTER.apps = () => {
+  const c = state.calib;
+  if (c && c.ok) {
+    const [w, h] = screenCm();
+    $("#appsCalib").textContent = `キャリブレーション済み（平均誤差 ${Math.hypot(c.loo_x * w, c.loo_y * h).toFixed(2)} cm）。続けてほかのアプリも試せます。`;
+  } else {
+    $("#appsCalib").textContent = state.info.zero_shot ? "キャリブレーションなしで試しています（精度は下がります）。" : "まだキャリブレーションをしていません。先に「再キャリブレーション」をしてください。";
+  }
+};
+const backToApps = () => { location.hash = state.calibrated || state.info.zero_shot ? "#/apps" : "#/ready"; };
+
+// ── 調理補助（手を使わずにレシピを読み進める） ─────────────────────────────
+// eyeCOOK（Bradbury, Shell, Knowles, CHI 2003 "Hands on cooking: towards an attentive kitchen"）の考え方：
+// 料理中は手がふさがっていて、目は鍋と画面を行き来する。画面は「いま見ているか」に合わせて、作業を邪魔せずに手伝う。
+//  - スクロール：レシピの上・下の帯を見ると、その方向へ動く（帯の奥ほど速い）
+//  - 今の手順：見ている手順を COOK_READ_MS 見続けると「今の手順」になる（読んでいる場所の印）
+//  - 目を離したとき：画面から目を離して（顔が見えない・視線が画面の外）COOK_AWAY_MS たってから戻ると、今の手順を画面の真ん中に戻して光らせる。
+//    読み上げをオンにしていれば、目を離したときに今の手順を声で読む（この PC の中だけで動く声があるときだけ）
+//  - ボタン（次へ・前へ・タイマー・メニュー・読み上げ）は、見つめると押せる（クリックでも押せる）
+// 音声で操作する部分（eyeCOOK の音声入力）は入れていない：ブラウザの音声認識は音声を外部に送るため。
+const COOK_READ_MS = 700, COOK_AWAY_MS = 1500, COOK_TIMER_DWELL_MS = 1000, COOK_SCROLL_PX_S = 520, COOK_SMOOTH = 0.45;
+const RECIPE = {
+  name: "親子丼",
+  lead: "鶏肉と卵だけでできる、15 分ほどの丼ものです（このアプリのために作った例のレシピ）。",
+  ing: ["鶏もも肉　200 g", "卵　3 個", "玉ねぎ　1/2 個", "三つ葉　少し", "ごはん　2 杯分", "水　100 mL", "しょうゆ　大さじ 2", "みりん　大さじ 2", "砂糖　小さじ 1"],
+  steps: [
+    { t: "玉ねぎを薄切りにする", d: "玉ねぎは繊維にそって 5 mm くらいの幅に切ります。三つ葉は 3 cm の長さに切っておきます。" },
+    { t: "鶏肉をひと口大に切る", d: "鶏もも肉は余分な脂を取り、2〜3 cm 角に切ります。大きさをそろえると火の通りがそろいます。" },
+    { t: "たれを煮立てる", d: "小さめのフライパンに水・しょうゆ・みりん・砂糖を入れて、中火にかけます。", timer: 60 },
+    { t: "玉ねぎと鶏肉を煮る", d: "煮立ったら玉ねぎと鶏肉を入れ、ふたをして中火で煮ます。途中で一度、鶏肉を裏返します。", timer: 300 },
+    { t: "卵を溶く", d: "卵はボウルに割り入れ、白身を切るように軽く混ぜます。混ぜすぎないのがふんわり仕上げるこつです。" },
+    { t: "卵の 2/3 を回し入れる", d: "鶏肉に火が通ったら、溶き卵の 2/3 を外側から回し入れ、ふたをして弱めの中火で固まりかけるまで待ちます。", timer: 40 },
+    { t: "残りの卵を入れて火を止める", d: "残りの卵を真ん中に回し入れ、三つ葉をのせてふたをし、すぐに火を止めます。余熱で半熟にします。", timer: 30 },
+    { t: "ごはんにのせる", d: "丼にごはんを盛り、フライパンからすべらせるようにのせます。煮汁も少しかけます。" },
+  ],
+};
+const cook = { cur: 0, readMs: 0, readIdx: -1, sx: null, sy: null, last: 0, awayMs: 0, away: false, dwell: new Map(),
+               timerEnd: 0, timerId: 0, speak: false, voice: null, spokeFor: -1 };
+
+function cookBuild() {
+  $("#cookName").textContent = RECIPE.name;
+  $("#cookLead").textContent = RECIPE.lead;
+  $("#cookIng").innerHTML = RECIPE.ing.map((s) => `<li>${s}</li>`).join("");
+  $("#cookSteps").innerHTML = RECIPE.steps.map((s, i) => `<li class="cook-step" data-i="${i}"><span class="no">${i + 1}</span>
+    <div><b>${s.t}</b><p>${s.d}</p>${s.timer ? `<button class="cook-btn chip" data-dwell="${COOK_TIMER_DWELL_MS}" data-timer="${s.timer}"><i class="fill"></i>⏱ ${s.timer >= 60 ? s.timer / 60 + " 分" : s.timer + " 秒"}</button>` : ""}</div></li>`).join("");
+  $$("#page-cook [data-dwell]").forEach((b) => b.addEventListener("click", () => cookPress(b)));
+}
+function cookSetCur(i, scroll) {
+  cook.cur = Math.max(0, Math.min(RECIPE.steps.length - 1, i));
+  $$("#cookSteps .cook-step").forEach((e, k) => { e.classList.toggle("cur", k === cook.cur); e.classList.toggle("done", k < cook.cur); });
+  if (scroll) cookCenter(cook.cur);
+}
+function cookCenter(i) {
+  const box = $("#cookScroll"), el = $$("#cookSteps .cook-step")[i];
+  if (el) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2, behavior: "smooth" });
+}
+function cookTimerTick() {
+  const left = Math.max(0, cook.timerEnd - Date.now()), sec = Math.ceil(left / 1000);
+  $("#cookTimer").textContent = cook.timerEnd ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}` : "–";
+  $("#cookTimer").classList.toggle("ring", cook.timerEnd > 0 && left === 0);
+  if (cook.timerEnd && left === 0 && !cook.rang) { cook.rang = true; cookBeep(); $("#cookTimerNote").textContent = "時間です！"; }
+}
+function cookBeep() {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.35, 0.7].forEach((t) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = 880; o.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0.0001, ac.currentTime + t); g.gain.exponentialRampToValueAtTime(0.3, ac.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + 0.25);
+      o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 0.3);
+    });
+  } catch (e) { /* 音が出せない環境 */ }
+}
+function cookSay(text) {
+  if (!cook.speak || !cook.voice || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.voice = cook.voice; u.lang = cook.voice.lang; u.rate = 1.0;
+  speechSynthesis.speak(u);
+}
+function cookPickVoice() {
+  // この PC の中だけで動く日本語の声（localService）だけを使う。ネットワークの声は使わない
+  const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+  cook.voice = vs.find((v) => v.localService && /^ja/i.test(v.lang)) || null;
+}
+if (window.speechSynthesis) speechSynthesis.addEventListener?.("voiceschanged", cookPickVoice);
+function cookPress(b) {
+  b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit");
+  if (b.id === "cookMenu") { backToApps(); return; }
+  if (b.id === "cookNext") { cookSetCur(cook.cur + 1, true); cookSay(RECIPE.steps[cook.cur].t + "。" + RECIPE.steps[cook.cur].d); return; }
+  if (b.id === "cookPrev") { cookSetCur(cook.cur - 1, true); return; }
+  if (b.id === "cookSpeak") {
+    cookPickVoice();
+    if (!cook.voice) { $("#cookSpeakLabel").textContent = "🔇 この PC に日本語の声がありません"; cook.speak = false; return; }
+    cook.speak = !cook.speak;
+    $("#cookSpeakLabel").textContent = cook.speak ? "🔊 読み上げ：オン" : "🔈 読み上げ：オフ";
+    return;
+  }
+  if (b.dataset.timer) {
+    const step = +b.closest(".cook-step").dataset.i;
+    cookSetCur(step, false);
+    cook.timerEnd = Date.now() + 1000 * +b.dataset.timer; cook.rang = false;
+    $("#cookTimerNote").textContent = `手順 ${step + 1}「${RECIPE.steps[step].t}」`;
+    cookTimerTick();
+  }
+}
+async function startCook() { await enterFs(); location.hash = "#/cook"; }
+$("#btnCook").addEventListener("click", startCook);
+
+ENTER.cook = async () => {
+  cookBuild();
+  Object.assign(cook, { readMs: 0, readIdx: -1, sx: null, sy: null, last: performance.now(), awayMs: 0, away: false, spokeFor: -1 });
+  cook.dwell.clear();
+  cookSetCur(cook.cur, false);
+  $("#cookScroll").scrollTop = 0;
+  cookPickVoice();
+  cook.timerId = setInterval(cookTimerTick, 250);
+  if (!(await ensureCamera())) { location.hash = "#/check"; return; }
+  await sleep(300);
+  startLoop((r) => {
+    const now = performance.now(), dt = Math.min(200, now - cook.last); cook.last = now;
+    $("#cookInfo").innerHTML = `モデル: ${r.model || state.info.model}<br>${r.calibrated ? "キャリブ済み" : "キャリブなし"}`;
+    const dot = $("#cookDot");
+    let onScreen = false, cx = 0, cy = 0;
+    if (r.gaze) {
+      [cx, cy] = screenToClient(r.gaze[0], r.gaze[1]);
+      onScreen = cx >= -40 && cy >= -40 && cx <= innerWidth + 40 && cy <= innerHeight + 40;
+    }
+    // 目を離している（顔が見えない・視線が画面の外）
+    if (!onScreen) {
+      dot.hidden = true; cook.sx = cook.sy = null;
+      cook.awayMs += dt;
+      if (cook.awayMs > COOK_AWAY_MS && !cook.away) {
+        cook.away = true;
+        if (cook.spokeFor !== cook.cur) { cook.spokeFor = cook.cur; cookSay(`手順 ${cook.cur + 1}。` + RECIPE.steps[cook.cur].t + "。" + RECIPE.steps[cook.cur].d); }
+      }
+      $("#cookMsg").textContent = !r.face ? "顔が見えません（鍋を見ているあいだは、そのままで大丈夫です）" : "画面の外を見ています";
+      cook.dwell.forEach((v, k) => cook.dwell.set(k, Math.max(0, v - 2 * dt)));
+      cookPaint(null);
+      return;
+    }
+    if (cook.away) {            // 戻ってきた：今の手順を真ん中に戻して光らせる
+      cook.away = false;
+      cookCenter(cook.cur);
+      const el = $$("#cookSteps .cook-step")[cook.cur];
+      if (el) { el.classList.remove("welcome"); void el.offsetWidth; el.classList.add("welcome"); }
+      $("#cookAwayMsg").textContent = `手順 ${cook.cur + 1}「${RECIPE.steps[cook.cur].t}」から続けましょう`;
+      $("#cookAway").hidden = false;
+      setTimeout(() => { $("#cookAway").hidden = true; }, 1800);
+    }
+    cook.awayMs = 0;
+    $("#cookMsg").textContent = "上・下の帯を見るとスクロール、ボタンは見つめると押せます（Esc でメニューへ）";
+    cook.sx = cook.sx == null ? cx : cook.sx + COOK_SMOOTH * (cx - cook.sx);
+    cook.sy = cook.sy == null ? cy : cook.sy + COOK_SMOOTH * (cy - cook.sy);
+    dot.hidden = false; Object.assign(dot.style, { left: cook.sx + "px", top: cook.sy + "px" });
+    // スクロール：上・下の帯の中なら、帯の奥ほど速く
+    const box = $("#cookScroll"), up = $("#cookUp").getBoundingClientRect(), dn = $("#cookDown").getBoundingClientRect();
+    const inX = cook.sx >= up.left && cook.sx <= up.right;
+    let v = 0;
+    if (inX && cook.sy <= up.bottom) v = -Math.min(1, (up.bottom - cook.sy) / up.height);
+    if (inX && cook.sy >= dn.top) v = Math.min(1, (cook.sy - dn.top) / dn.height);
+    $("#cookUp").classList.toggle("on", v < 0); $("#cookDown").classList.toggle("on", v > 0);
+    if (v) box.scrollTop += v * COOK_SCROLL_PX_S * dt / 1000;
+    // 今の手順：見ている手順を COOK_READ_MS 見続けたら
+    const el = document.elementFromPoint(cook.sx, cook.sy);
+    const st = el && el.closest("#cookSteps .cook-step");
+    const idx = st ? +st.dataset.i : -1;
+    if (idx >= 0 && idx === cook.readIdx) { cook.readMs += dt; if (cook.readMs >= COOK_READ_MS && idx !== cook.cur) cookSetCur(idx, false); }
+    else { cook.readIdx = idx; cook.readMs = 0; }
+    // 見つめると押せるボタン
+    const hot = el && el.closest("#page-cook [data-dwell]");
+    cookPaint(hot, dt);
+  });
+};
+function cookPaint(hot, dt = 0) {
+  $$("#page-cook [data-dwell]").forEach((b) => {
+    let a = cook.dwell.get(b) || 0;
+    a = b === hot ? a + dt : Math.max(0, a - 2 * dt);
+    cook.dwell.set(b, a);
+    const need = +b.dataset.dwell;
+    b.style.setProperty("--p", Math.min(1, a / need));
+    b.classList.toggle("look", b === hot);
+    if (a >= need) { cook.dwell.set(b, -600); cookPress(b); }     // 押したあと 0.6 秒は続けて押さない
+  });
+}
+LEAVE.cook = () => { stopLoop(); clearInterval(cook.timerId); if (window.speechSynthesis) speechSynthesis.cancel(); exitFs(); };
 
 window.addEventListener("hashchange", route);
 route();
