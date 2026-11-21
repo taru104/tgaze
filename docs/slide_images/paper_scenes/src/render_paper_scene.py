@@ -201,7 +201,7 @@ shelf_wood = principled("ShelfWood", (0.58, 0.60, 0.62), 0.55, 0.3)       # 明�
 floor_m = principled("Floor", (0.36, 0.40, 0.36), 0.7)                     # 緑がかったグレーの床
 wall_m = principled("Wall", (0.88, 0.87, 0.84), 0.9)
 ceil_m = principled("Ceiling", (0.92, 0.92, 0.92), 0.9)
-book_cols = [(0.62, 0.16, 0.14), (0.15, 0.30, 0.55), (0.20, 0.42, 0.30), (0.78, 0.66, 0.38), (0.30, 0.24, 0.42),
+book_cols = [(0.62, 0.16, 0.14), (0.15, 0.30, 0.55), (0.20, 0.42, 0.30), (0.52, 0.58, 0.68), (0.30, 0.24, 0.42),
              (0.85, 0.82, 0.74), (0.12, 0.12, 0.14), (0.55, 0.38, 0.22), (0.40, 0.55, 0.62), (0.72, 0.45, 0.50)]
 book_mats = [principled(f"Book{i}", c, 0.6) for i, c in enumerate(book_cols)]
 AISLE = 0.72                     # 通路の半分の幅（棚の前面の y = ±AISLE）
@@ -271,7 +271,7 @@ for side, sgn in ((0, -1), (1, 1)):          # 0 = 人の前の棚（-Y）、1 =
                         bpy.data.objects.remove(o)
                     w = 0.045
                     tb_mat = principled("TargetBook", (0.92, 0.74, 0.12), 0.5)
-                    yo = -sgn * 0.05                         # 通路側へ 5 cm 引き出す
+                    yo = -sgn * 0.13                         # 通路側へ 13 cm 引き出す（どの本を見ているか分かるように）
                     target_book = box("TargetBook", x, x + w, min(yfront + yo, yback + yo), max(yfront + yo, yback + yo), zf, zf + 0.27, tb_mat)
                     target_center = np.array([x + w / 2, yfront + yo, zf + 0.15])    # 背表紙の真ん中
                 x += w + 0.001
@@ -390,13 +390,16 @@ else:
 
 # ---------------------------------------------------------------- 監視カメラ（高さ約 2.5 m、人を見下ろす）
 look_pt = np.array([float(cyc[0]), float(cyc[1]) - 0.15, float(H_ + 1.25)])
-CCTV = [(-3.0, -0.40, 2.50), (3.0, 0.40, 2.50), (-1.9, 0.45, 2.60), (1.9, -0.45, 2.60), (1.5, 0.50, 2.55), (-1.5, -0.50, 2.55)]
+CCTV = [(-3.0, -0.40, 2.50), (3.0, 0.40, 2.50), (-1.9, 0.45, 2.60), (1.9, -0.45, 2.60), (1.5, 0.50, 2.55), (-1.45, -0.18, 2.45)]
+# CCTV5 は (a) 用：人に近づけて画角を狭め（35 mm 相当）、人の頭と見ている本のあいだを向く
+CCTV_LENS_EACH = [22, 22, 22, 22, 22, 35]
 CCTV_LENS = 22
 house_m = principled("CCTVHousing", (0.93, 0.93, 0.92), 0.35)
 cams = []
 for i, (x, y, z) in enumerate(CCTV):
     p = np.array([x, y, H_ + z])
-    d = (look_pt - p) / np.linalg.norm(look_pt - p)
+    lp = look_pt if i != 5 else (cyc + target_center) / 2 + np.array([0.0, 0.36, -0.10])
+    d = (lp - p) / np.linalg.norm(lp - p)
     ax = np.cross(d, [0, 0, 1.0])
     ax /= np.linalg.norm(ax)
     ay = np.cross(ax, d)
@@ -406,7 +409,7 @@ for i, (x, y, z) in enumerate(CCTV):
     top = np.array([x, y, H_ + 2.85])
     cylinder_between(f"CCTVMount{i}", p - d * 0.09 + ay * 0.04, top, 0.012, house_m, 12)
     cd = bpy.data.cameras.new(f"CCTV{i}")
-    cd.lens, cd.sensor_width, cd.sensor_fit = CCTV_LENS, 36, "HORIZONTAL"
+    cd.lens, cd.sensor_width, cd.sensor_fit = CCTV_LENS_EACH[i], 36, "HORIZONTAL"
     cd.clip_start = 0.02
     cam = bpy.data.objects.new(f"CCTV{i}", cd)
     scene.collection.objects.link(cam)
@@ -493,14 +496,15 @@ info = {
     "person": {"generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3) + clothes + shoes; arms lowered and head turned by rotating bones",
                "identity": PERSON["identity"], "appearance": {k: gen.app[k] for k in ("sex_for_appearance", "race_for_appearance", "skin", "hair", "iris")},
                "clothes": PERSON["clothes"], "shoes": PERSON["shoes"], "pose": "立って前の棚の本を見る"},
-    "gaze": {"target": "前の棚（人の正面）の上から 2 段目、少し引き出した黄色い本の背表紙の真ん中", "target_world_m": vec(a),
+    "gaze": {"target": "前の棚（人の正面）の上から 2 段目、13 cm 引き出した黄色い本の背表紙の真ん中", "target_world_m": vec(a),
              "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik", "residual_deg": {s: round(v, 4) for s, v in resid.items()},
              "eye_center_world_m": {s: vec(v) for s, v in eye_c.items()}},
     "room": {"aisle_width_m": 2 * AISLE, "shelf": {"height_m": SH_H, "depth_m": SH_D, "length_m": 2 * SH_X, "levels_m": LEVELS},
              "floor_z_m": round(H_, 4), "ceiling_height_m": 2.85, "aruco_markers": markers_info,
              "world_axes": "人は -Y を向く（前の棚）。人の右 = -X、上 = +Z。床の高さ floor_z_m"},
     "cameras": [{"name": f"CCTV{i}", "location_world_m": vec(c.location), "height_above_floor_m": round(float(c.location.z - H_), 3),
-                 "look_at_world_m": vec(look_pt), "lens_mm": CCTV_LENS, "sensor_width_mm": 36} for i, c in enumerate(cams)],
+                 "look_at_world_m": vec(look_pt if i != 5 else (cyc + target_center) / 2 + np.array([0.0, 0.36, -0.10])),
+                 "lens_mm": CCTV_LENS_EACH[i], "sensor_width_mm": 36} for i, c in enumerate(cams)],
     "outputs": outputs,
     "render": {"engine": "CYCLES", "device": "GPU", "samples": SAMPLES, "denoise": True, "view_transform": "Standard"},
 }
