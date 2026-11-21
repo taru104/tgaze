@@ -28,6 +28,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MARKERS = os.path.join(HERE, "markers")
 args = sys.argv[sys.argv.index("--") + 1:]
 NOGEAR = "--nogear" in args
+WALK = "--walk" in args        # (a) 描き直し：人は通路をカメラの方へ歩いてくる途中。部屋（棚・本・マーカー・照明・監視カメラ）を回して、通路を人の前後に伸ばす
 args = [a for a in args if not a.startswith("--")]
 SCENE, SHOT, OUT_DIR = args[0], args[1], args[2]
 RES_X = int(args[3]) if len(args) > 3 else 1920
@@ -66,6 +67,7 @@ for n in ("KeyLight", "FillLight"):
         bpy.data.objects.remove(bpy.data.objects[n])
 mbk.add_mpfb_eye_ik(rig)
 upd()
+HUMAN_SET = set(bpy.data.objects)          # 人（と目の IK）。部屋の回転には入れない
 
 
 def rot_bone(name, axis, deg):
@@ -82,9 +84,23 @@ rot_bone("upperarm01.L", "Y", 40)
 rot_bone("upperarm01.R", "Y", -40)
 rot_bone("lowerarm01.L", "X", 48)
 rot_bone("lowerarm01.R", "X", 48)
-rot_bone("neck01", "X", 6)
-rot_bone("head", "X", 7)
-rot_bone("head", "Z", -6)
+if not WALK:
+    rot_bone("neck01", "X", 6)
+    rot_bone("head", "X", 7)
+    rot_bone("head", "Z", -6)
+else:
+    # 歩く途中：左足を前、右足を後ろ。腕は足と逆に振る。顔は前（カメラの方）、少しだけうつむく
+    rot_bone("upperleg01.L", "X", -13)
+    rot_bone("lowerleg01.L", "X", 5)
+    rot_bone("upperleg01.R", "X", 9)
+    rot_bone("lowerleg01.R", "X", 17)
+    rot_bone("foot.R", "X", -8)
+    rot_bone("upperarm01.R", "X", -16)
+    rot_bone("upperarm01.L", "X", 14)
+    rot_bone("lowerarm01.R", "X", -12)
+    rot_bone("spine04", "X", 2)
+    rot_bone("neck01", "X", 3)
+    rot_bone("head", "X", 3)
 
 
 def eval_world_verts(obj):
@@ -286,8 +302,18 @@ for k, (fx, fy) in enumerate([(-1.3, 0.25), (1.1, -0.3), (2.0, 0.3)]):
     markers_info.append({"id": mk_id, "dict": "DICT_4X4_50", "where": "floor", "center_m": [fx, fy, round(H_, 3)], "size_m": s_})
     mk_id += 1
 
+# 部屋の座標 → 世界の座標（WALK のときだけ回す）：Z まわりに +90°（通路が人の前後 = Y に伸びる）、Y へ -ROOM_SHIFT
+ROOM_SHIFT = 1.10
+if WALK:
+    R_RW = np.array([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    t_RW = np.array([0.0, -ROOM_SHIFT, 0.0])
+else:
+    R_RW, t_RW = np.eye(3), np.zeros(3)
+to_world = lambda p: R_RW @ np.asarray(p, dtype=float) + t_RW  # noqa: E731
+to_room = lambda p: R_RW.T @ (np.asarray(p, dtype=float) - t_RW)  # noqa: E731
+
 # ---------------------------------------------------------------- 目を本へ
-a = target_center
+a = to_world(target_center)
 _, hist = mbk.aim_with_mpfb_ik(rig, eyes, eye_info, a)
 upd()
 m = mbk.measure(rig, eyes, eye_info)
@@ -389,16 +415,24 @@ else:
     bpy.context.active_object.data.materials.append(red)
 
 # ---------------------------------------------------------------- 監視カメラ（高さ約 2.5 m、人を見下ろす）
-look_pt = np.array([float(cyc[0]), float(cyc[1]) - 0.15, float(H_ + 1.25)])
+look_pt = to_room(np.array([float(cyc[0]), float(cyc[1]) - 0.15, float(H_ + 1.25)]))   # 監視カメラは部屋の座標で置く
 CCTV = [(-3.0, -0.40, 2.50), (3.0, 0.40, 2.50), (-1.9, 0.45, 2.60), (1.9, -0.45, 2.60), (1.5, 0.50, 2.55), (-1.45, -0.18, 2.45)]
 # CCTV5 は (a) 用：人に近づけて画角を狭め（35 mm 相当）、人の頭と見ている本のあいだを向く
 CCTV_LENS_EACH = [22, 22, 22, 22, 22, 35]
+if WALK:   # CCTV6：(a) 用。通路の端の上（部屋の x = -3.2、通路の中央、高さ 2.5 m）から、通路に沿って人を見下ろす
+    CCTV.append((-3.20, 0.0, 2.50))
+    CCTV_LENS_EACH.append(36)
 CCTV_LENS = 22
 house_m = principled("CCTVHousing", (0.93, 0.93, 0.92), 0.35)
 cams = []
 for i, (x, y, z) in enumerate(CCTV):
     p = np.array([x, y, H_ + z])
-    lp = look_pt if i != 5 else (cyc + target_center) / 2 + np.array([0.0, 0.36, -0.10])
+    if i == 6:
+        lp = to_room(np.array([float(cyc[0]), float(cyc[1]) + 0.2, float(H_ + 1.00)]))      # 人の腰と胸のあいだ（足先まで入れる）
+    elif i == 5:
+        lp = (to_room(cyc) + target_center) / 2 + np.array([0.0, 0.36, -0.10])
+    else:
+        lp = look_pt
     d = (lp - p) / np.linalg.norm(lp - p)
     ax = np.cross(d, [0, 0, 1.0])
     ax /= np.linalg.norm(ax)
@@ -427,6 +461,19 @@ for k, x in enumerate((-2.0, 0.0, 2.0)):
     box(f"CeilPanel{k}", x - 0.6, x + 0.6, -0.3, 0.3, H_ + 2.835, H_ + 2.85, emission_only(f"PanelGlow{k}", (1.0, 0.98, 0.94), 1.0))
 scene.world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.8, 0.8, 0.8, 1)
 scene.world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.08
+
+# ---------------------------------------------------------------- 部屋を回す（人と機材・赤い線は回さない）
+GEAR_SET = set(gear) | {o for o in bpy.data.objects if o.name.startswith(("GazeLine", "Sphere"))}
+pivot = bpy.data.objects.new("RoomPivot", None)
+scene.collection.objects.link(pivot)
+for ob in list(bpy.data.objects):
+    if ob in HUMAN_SET or ob in GEAR_SET or ob is pivot or ob.parent is not None:
+        continue
+    ob.parent = pivot
+mrw = np.eye(4)
+mrw[:3, :3], mrw[:3, 3] = R_RW, t_RW
+pivot.matrix_world = Matrix(mrw.tolist())
+upd()
 
 # ---------------------------------------------------------------- 描画
 scene.render.engine = "CYCLES"
@@ -495,15 +542,18 @@ info = {
     "nogear_version": NOGEAR,
     "person": {"generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3) + clothes + shoes; arms lowered and head turned by rotating bones",
                "identity": PERSON["identity"], "appearance": {k: gen.app[k] for k in ("sex_for_appearance", "race_for_appearance", "skin", "hair", "iris")},
-               "clothes": PERSON["clothes"], "shoes": PERSON["shoes"], "pose": "立って前の棚の本を見る"},
+               "clothes": PERSON["clothes"], "shoes": PERSON["shoes"],
+               "pose": "通路をカメラ（CCTV6）の方へ歩いてくる途中（左足が前）。体と顔はカメラの方、目は左前の棚の黄色い本" if WALK else "立って前の棚の本を見る"},
     "gaze": {"target": "前の棚（人の正面）の上から 2 段目、13 cm 引き出した黄色い本の背表紙の真ん中", "target_world_m": vec(a),
              "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik", "residual_deg": {s: round(v, 4) for s, v in resid.items()},
              "eye_center_world_m": {s: vec(v) for s, v in eye_c.items()}},
     "room": {"aisle_width_m": 2 * AISLE, "shelf": {"height_m": SH_H, "depth_m": SH_D, "length_m": 2 * SH_X, "levels_m": LEVELS},
              "floor_z_m": round(H_, 4), "ceiling_height_m": 2.85, "aruco_markers": markers_info,
-             "world_axes": "人は -Y を向く（前の棚）。人の右 = -X、上 = +Z。床の高さ floor_z_m"},
-    "cameras": [{"name": f"CCTV{i}", "location_world_m": vec(c.location), "height_above_floor_m": round(float(c.location.z - H_), 3),
-                 "look_at_world_m": vec(look_pt if i != 5 else (cyc + target_center) / 2 + np.array([0.0, 0.36, -0.10])),
+             "world_axes": ("人は -Y（通路の先、CCTV6 の方）を向く。人の右 = -X、上 = +Z。黄色い本の棚は人の左（+X）" if WALK else "人は -Y を向く（前の棚）。人の右 = -X、上 = +Z") + "。床の高さ floor_z_m"},
+    "walk_version": WALK, "room_to_world": {"rotation_z_deg": 90 if WALK else 0, "translation_m": vec(t_RW),
+                                           "note": "棚・本・マーカー・照明・監視カメラは部屋の座標で作り、この変換で置いた。room.aruco_markers の位置は部屋の座標"},
+    "cameras": [{"name": f"CCTV{i}", "location_world_m": vec(c.matrix_world.translation), "height_above_floor_m": round(float(c.matrix_world.translation.z - H_), 3),
+                 "look_at_world_m": vec(to_world(look_pt)) if i < 5 else None,
                  "lens_mm": CCTV_LENS_EACH[i], "sensor_width_mm": 36} for i, c in enumerate(cams)],
     "outputs": outputs,
     "render": {"engine": "CYCLES", "device": "GPU", "samples": SAMPLES, "denoise": True, "view_transform": "Standard"},

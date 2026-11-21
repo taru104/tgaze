@@ -1,0 +1,306 @@
+{
+ "note": "論文の撮り方を 3DCG で再現したイメージ。論文の図の写しではない。学習には使っていない（学習データの生成・学習はしていない）",
+ "paper": {
+  "name": "GAFA",
+  "title": "Dynamic 3D Gaze from Afar: Deep Gaze Estimation from Temporal Eye-Head-Body Coordination",
+  "authors": "Soma Nonaka, Shohei Nobuhara, Ko Nishino",
+  "venue": "CVPR 2022",
+  "reproduced_from": "依頼文に書かれた撮り方（本棚の通路・メガネ型の視線計測器・胸のカメラ・ArUco マーカー・高い位置の監視カメラ）。論文の図は写していない。家具の配置・色・服は独自"
+ },
+ "gear": [
+  {
+   "name": "メガネ型の視線計測器",
+   "parts": "細い黒い枠、目を撮る小さなカメラ（左右、枠の下の内側から目を見上げる）、前を撮るカメラ（鼻の上）"
+  },
+  {
+   "name": "胸のカメラ",
+   "parts": "肩から胸にかけた X 字のベルト＋胸を一周するベルト、胸の板、前向きのカメラ",
+   "location_world_m": [
+    0.0,
+    -0.2067,
+    1.3402
+   ]
+  }
+ ],
+ "nogear_version": false,
+ "person": {
+  "generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3) + clothes + shoes; arms lowered and head turned by rotating bones",
+  "identity": 228,
+  "appearance": {
+   "sex_for_appearance": "male",
+   "race_for_appearance": "african",
+   "skin": "middleage_african_male",
+   "hair": "short02",
+   "iris": "brown"
+  },
+  "clothes": "male_casualsuit03",
+  "shoes": "shoes04",
+  "pose": "通路をカメラ（CCTV6）の方へ歩いてくる途中（左足が前）。体と顔はカメラの方、目は左前の棚の黄色い本"
+ },
+ "gaze": {
+  "target": "前の棚（人の正面）の上から 2 段目、13 cm 引き出した黄色い本の背表紙の真ん中",
+  "target_world_m": [
+   0.605,
+   -1.0575,
+   1.6731
+  ],
+  "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik",
+  "residual_deg": {
+   "left": 0.0001,
+   "right": 0.0005
+  },
+  "eye_center_world_m": {
+   "left": [
+    0.0304,
+    -0.1605,
+    1.6632
+   ],
+   "right": [
+    -0.0304,
+    -0.1605,
+    1.6632
+   ]
+  }
+ },
+ "room": {
+  "aisle_width_m": 1.44,
+  "shelf": {
+   "height_m": 2.05,
+   "depth_m": 0.34,
+   "length_m": 4.8,
+   "levels_m": [
+    0.08,
+    0.44,
+    0.8,
+    1.16,
+    1.52,
+    1.88
+   ]
+  },
+  "floor_z_m": 0.0031,
+  "ceiling_height_m": 2.85,
+  "aruco_markers": [
+   {
+    "id": 0,
+    "dict": "DICT_4X4_50",
+    "where": "shelf",
+    "center_m": [
+     -1.2,
+     -0.74,
+     1.608
+    ],
+    "size_m": 0.16
+   },
+   {
+    "id": 1,
+    "dict": "DICT_4X4_50",
+    "where": "shelf",
+    "center_m": [
+     2.0,
+     -0.74,
+     0.528
+    ],
+    "size_m": 0.16
+   },
+   {
+    "id": 2,
+    "dict": "DICT_4X4_50",
+    "where": "shelf",
+    "center_m": [
+     -1.2,
+     0.74,
+     1.248
+    ],
+    "size_m": 0.16
+   },
+   {
+    "id": 3,
+    "dict": "DICT_4X4_50",
+    "where": "shelf",
+    "center_m": [
+     1.2,
+     0.74,
+     0.888
+    ],
+    "size_m": 0.16
+   },
+   {
+    "id": 4,
+    "dict": "DICT_4X4_50",
+    "where": "floor",
+    "center_m": [
+     -1.3,
+     0.25,
+     0.003
+    ],
+    "size_m": 0.2
+   },
+   {
+    "id": 5,
+    "dict": "DICT_4X4_50",
+    "where": "floor",
+    "center_m": [
+     1.1,
+     -0.3,
+     0.003
+    ],
+    "size_m": 0.2
+   },
+   {
+    "id": 6,
+    "dict": "DICT_4X4_50",
+    "where": "floor",
+    "center_m": [
+     2.0,
+     0.3,
+     0.003
+    ],
+    "size_m": 0.2
+   }
+  ],
+  "world_axes": "人は -Y（通路の先、CCTV6 の方）を向く。人の右 = -X、上 = +Z。黄色い本の棚は人の左（+X）。床の高さ floor_z_m"
+ },
+ "walk_version": true,
+ "room_to_world": {
+  "rotation_z_deg": 90,
+  "translation_m": [
+   0.0,
+   -1.1,
+   0.0
+  ],
+  "note": "棚・本・マーカー・照明・監視カメラは部屋の座標で作り、この変換で置いた。room.aruco_markers の位置は部屋の座標"
+ },
+ "cameras": [
+  {
+   "name": "CCTV0",
+   "location_world_m": [
+    0.399,
+    -4.0906,
+    2.5
+   ],
+   "height_above_floor_m": 2.497,
+   "look_at_world_m": [
+    0.0,
+    -0.3105,
+    1.2531
+   ],
+   "lens_mm": 22,
+   "sensor_width_mm": 36
+  },
+  {
+   "name": "CCTV1",
+   "location_world_m": [
+    -0.3984,
+    1.8914,
+    2.4983
+   ],
+   "height_above_floor_m": 2.495,
+   "look_at_world_m": [
+    0.0,
+    -0.3105,
+    1.2531
+   ],
+   "lens_mm": 22,
+   "sensor_width_mm": 36
+  },
+  {
+   "name": "CCTV2",
+   "location_world_m": [
+    -0.4485,
+    -2.9912,
+    2.5987
+   ],
+   "height_above_floor_m": 2.596,
+   "look_at_world_m": [
+    0.0,
+    -0.3105,
+    1.2531
+   ],
+   "lens_mm": 22,
+   "sensor_width_mm": 36
+  },
+  {
+   "name": "CCTV3",
+   "location_world_m": [
+    0.4475,
+    0.7938,
+    2.5956
+   ],
+   "height_above_floor_m": 2.593,
+   "look_at_world_m": [
+    0.0,
+    -0.3105,
+    1.2531
+   ],
+   "lens_mm": 22,
+   "sensor_width_mm": 36
+  },
+  {
+   "name": "CCTV4",
+   "location_world_m": [
+    -0.4968,
+    0.3955,
+    2.5448
+   ],
+   "height_above_floor_m": 2.542,
+   "look_at_world_m": [
+    0.0,
+    -0.3105,
+    1.2531
+   ],
+   "lens_mm": 22,
+   "sensor_width_mm": 36
+  },
+  {
+   "name": "CCTV5",
+   "location_world_m": [
+    0.1789,
+    -2.541,
+    2.449
+   ],
+   "height_above_floor_m": 2.446,
+   "look_at_world_m": null,
+   "lens_mm": 35,
+   "sensor_width_mm": 36
+  },
+  {
+   "name": "CCTV6",
+   "location_world_m": [
+    -0.0,
+    -4.2905,
+    2.4999
+   ],
+   "height_above_floor_m": 2.497,
+   "look_at_world_m": null,
+   "lens_mm": 36,
+   "sensor_width_mm": 36
+  }
+ ],
+ "outputs": [
+  {
+   "image": "gafa_a_cctv6_walk_1920x1080.png",
+   "camera": "CCTV6",
+   "size_px": [
+    1920,
+    1080
+   ],
+   "image_px": {
+    "target_book": [
+     1309.3,
+     381.3
+    ],
+    "eyes": [
+     960.0,
+     283.3
+    ]
+   }
+  }
+ ],
+ "render": {
+  "engine": "CYCLES",
+  "device": "GPU",
+  "samples": 128,
+  "denoise": true,
+  "view_transform": "Standard"
+ }
+}

@@ -16,7 +16,8 @@
 
 | ファイル | 中身 |
 |---|---|
-| `gafa_a_cctv5_1920x1080.png` / `.json` | (a) 監視カメラ CCTV5 からの 1 枚（1920×1080） |
+| `gafa_a_cctv6_walk_1920x1080.png` / `.json` | (a) の描き直し：人が通路を CCTV6（通路の端の上、高さ 2.5 m）の方へ歩いてくる途中。体と顔はカメラの方、目は左前の棚の黄色い本（1920×1080） |
+| `gafa_a_cctv5_1920x1080.png` / `.json` | (a) の前の版：立って前の棚の本を見る人を CCTV5 から（1920×1080） |
 | `gafa_b_all_cctv_960x540x6.png` / `.json` | (b) 6 台の絵（各 960×540）を 3 列 × 2 行に並べたもの。1 枚ずつは `gafa_b_tiles/` |
 | `gafa_a_cctv5_preview960.png` / `.json` | (a) の最初の試し描き（直す前。CCTV5 の位置が違う） |
 
@@ -31,6 +32,7 @@ JSON には、元にした論文、再現した機材、ArUco マーカーの位
   cd ~/mpfb2-gaze-generator-poc
   blender --background --python <このフォルダ>/src/render_paper_scene.py -- gafa cam5 OUT_DIR 1920 1080 128     # (a)
   blender --background --python <このフォルダ>/src/render_paper_scene.py -- gafa all  OUT_DIR 960 540 128       # (b) の 6 枚
+  blender --background --python <このフォルダ>/src/render_paper_scene.py -- gafa cam6 OUT_DIR 1920 1080 128 --walk   # (a) の描き直し（歩く人・CCTV6）
   ```
   `--nogear` を付けると、機材を外して目から本へ赤い線を引いた版になる。
 - `markers/`：OpenCV（`cv2.aruco.generateImageMarker`、`DICT_4X4_50`）で作った ArUco マーカー（白い余白付き）。
@@ -72,3 +74,11 @@ v2 で直したこと
 - めり込みの確認（BVH で三角形の交差を数えた）：ハンドルと太もも 0、ハンドルとダッシュボード 0、手とハンドル 0、体と座席 0
 - `driving_passenger_view_preview960_v3.png` / `.json`、`driving_hands_check_passenger_v3.png`、`driving_hands_check_top_v3.png`
 - 落としたモデルを調べた道具：`src/inspect_blend.py`（中身の一覧）、`src/peek_blend.py`・`src/peek_pack.py`（屋根を切った絵）。どれも .blend の中のスクリプトは実行しない読み方
+
+### (a) の描き直し（`--walk`）
+
+- 人：通路をカメラの方へ歩いてくる途中（左足が前、腕は足と逆に振る）。体と顔はカメラの方、目は左前の棚の黄色い本へ（残差 0.001° 以下）
+- カメラ：CCTV6 を 1 台足した。通路の端の上（通路の中央、高さ 2.5 m、人から約 4.2 m）から、通路に沿って人を見下ろす（36 mm 相当）
+- 部屋の作り方は変えていない（棚の並べ方・色・床・本・ArUco マーカー・服は同じ）。人の機材の作り方が「人は -Y を向く」前提なので、
+  部屋（棚・本・マーカー・照明・監視カメラ）を Z まわりに 90° 回して Y へ -1.10 m ずらし、通路を人の前後に伸ばした（JSON の `room_to_world`）
+- (b) の 6 枚は前の版（立って前の棚を見る人）のまま。描き直していない
