@@ -82,3 +82,17 @@ v2 で直したこと
 - 部屋の作り方は変えていない（棚の並べ方・色・床・本・ArUco マーカー・服は同じ）。人の機材の作り方が「人は -Y を向く」前提なので、
   部屋（棚・本・マーカー・照明・監視カメラ）を Z まわりに 90° 回して Y へ -1.10 m ずらし、通路を人の前後に伸ばした（JSON の `room_to_world`）
 - (b) の 6 枚は前の版（立って前の棚を見る人）のまま。描き直していない
+
+### v4：車内を既存の車のモデルに置き換え（試し描き 960×540）
+
+- 車：BLENDER EEVEE Brandless Small 4 Door Hatchback（車名 SHC MCE 1）、作者 denniswoo1993（CGTrader）、
+  https://www.cgtrader.com/free-3d-models/car/car/blender-eevee-brandless-small-4-door-hatchback 、CGTrader Royalty Free License（no AI）
+  - **スライドの絵にだけ使う。学習データの生成・学習には使わない。モデルのファイル（.blend・テクスチャ・RAR）はこのリポジトリに入れていない**（`~/assets/car/` から読む）
+  - もともと左ハンドルなので反転していない。Z まわりに 180° 回して前を -Y にした
+- 大きさ：ハンドルの外径 37 cm に合わせた縮尺（0.877）では、座面から天井までが 0.72 m しかなく、座った人の頭（0.87 m）が天井に入る。
+  そこで車は頭が入る大きさ（1.121 倍、座面から天井まで 0.92 m）にし、ハンドルの部品だけを外径 37 cm に縮めた。運転席は 0.88 倍に縮め、11.5 cm 前へずらした
+- 前に自分で作った車内の部品と Savino のハンドルは消し、ハンドルはモデルのものを使った。ハンドルの真ん中の飾り（エンブレム）は黒い無地にした
+- 車のカメラ：前の箱 2 つを消し、ダッシュボードの真ん中・フロントガラスの手前にスマホ（15 × 7 × 0.8 cm）をホルダーで縦に立てた（画面は運転者向き）
+- めり込み（BVH）：ハンドルの縁と体 0（手 0・太もも 0）、ハンドルの縁と車内 0、体と運転席 0、体と車内 0、頭と天井 0（4 cm あく）
+- `driving_passenger_view_preview960_v4.png` / `.json`、`driving_hands_check_passenger_v4.png`、`driving_hands_check_top_v4.png`
+- 調べた道具：`src/inspect_car.py`（部品の一覧・屋根を切った絵）、`src/inspect_wheelpart.py`（ハンドルの部品を塊に分ける）

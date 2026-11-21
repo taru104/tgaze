@@ -1,0 +1,349 @@
+{
+ "note": "論文の撮り方を 3DCG で再現したイメージ。論文の図の写しではない。学習には使っていない（学習データの生成・学習はしていない）",
+ "paper": {
+  "name": "（未確定）運転中の視線データの撮り方",
+  "reproduced_from": "依頼文に書かれた撮り方（左ハンドルの車内、頭に着ける視線計測器とカメラ、車のカメラ 2 台）。元の論文は未確定のため、車のカメラの向きは仮（front = 道路向き、back = 運転者向き）"
+ },
+ "image": "driving_passenger_view_preview960_v4.png",
+ "size_px": [
+  960,
+  540
+ ],
+ "origin": "top-left, x right, y down",
+ "nogear_version": false,
+ "person": {
+  "generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3) + clothes + shoes; seated by rotating leg / spine bones; hands on the wheel by Blender IK",
+  "identity": 250,
+  "appearance": {
+   "sex_for_appearance": "female",
+   "race_for_appearance": "caucasian",
+   "skin": "young_caucasian_female",
+   "hair": "short02",
+   "iris": "lightblue"
+  },
+  "clothes": "female_casualsuit02",
+  "shoes": "shoes02",
+  "pose": "運転席に座り、ハンドルを 10 時と 2 時で握る"
+ },
+ "gaze": {
+  "target": "前の道路（自車線、約 25 m 先）",
+  "target_world_m": [
+   0.15,
+   -24.9379,
+   0.1879
+  ],
+  "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik",
+  "residual_deg": {
+   "left": 0.0005,
+   "right": 0.0005
+  },
+  "eye_center_world_m": {
+   "left": [
+    0.0285,
+    0.0621,
+    1.4992
+   ],
+   "right": [
+    -0.0285,
+    0.0621,
+    1.4992
+   ]
+  }
+ },
+ "gear": {
+  "phone": {
+   "where": "ダッシュボードの真ん中（車の中心の x）、フロントガラスの手前。ホルダーで縦に立てる",
+   "size_m": [
+    0.07,
+    0.15,
+    0.008
+   ],
+   "center_world_m": [
+    -0.4741,
+    -0.8269,
+    1.3607
+   ],
+   "screen_normal_world": [
+    0.4603,
+    0.8631,
+    0.2079
+   ],
+   "front_camera": {
+    "location_world_m": [
+     -0.4784,
+     -0.8348,
+     1.4263
+    ],
+    "facing": "運転者（画面側）"
+   },
+   "rear_camera": {
+    "location_world_m": [
+     -0.4688,
+     -0.8487,
+     1.4134
+    ],
+    "facing": "道路（裏側）"
+   },
+   "dashboard_part_under": "Compact Car Part.031"
+  },
+  "head_eye_tracker": {
+   "parts": "頭を一周するバンド、額のカメラ（前向き）、こめかみから伸びるアームの先の目を撮るカメラ（左右）"
+  }
+ },
+ "car": {
+  "drive": "左ハンドル（運転席は車の左、助手席は運転者の右 = -X）",
+  "model": {
+   "model": "BLENDER EEVEE Brandless Small 4 Door Hatchback（車名 SHC MCE 1）",
+   "author": "denniswoo1993",
+   "url": "https://www.cgtrader.com/free-3d-models/car/car/blender-eevee-brandless-small-4-door-hatchback",
+   "license": "CGTrader Royalty Free License（no AI）。ページの表示は Free for personal and commercial use",
+   "use": "発表スライドの絵にだけ使う。学習データの生成・学習には使わない。モデルのファイルは公開リポジトリに置かない",
+   "file": "SHC MCE1 [blender 2.8 only].blend（~/assets/car/、リポジトリの外）",
+   "sha256_of_rar": "8074e3317ee72953c88a616543f1ab412fff50320d0683ef5da3442b2543c918",
+   "driver_seat_slid_forward_m": 0.1152,
+   "driver_seat_shrink": 0.88,
+   "scale": 1.121,
+   "scale_if_wheel_37cm": 0.8773,
+   "scale_for_headroom": 1.121,
+   "headroom_note": "ハンドルの外径 37 cm に合わせた縮尺では、座面から天井までが座った人の頭の高さより低い（頭が天井に入る）。そこで車は頭が入る大きさまで拡大し、ハンドルの部品だけを外径 37 cm に縮めた",
+   "seat_cushion_to_roof_m": 0.9196,
+   "seated_head_height_m": 0.8707,
+   "rotation_z_deg": 180,
+   "translation_m": [
+    -3.065,
+    -1.6598,
+    -0.0999
+   ],
+   "left_hand_drive_as_modeled": true,
+   "mirrored": false,
+   "length_m_after_scale": 5.341,
+   "height_m_after_scale": 1.545
+  },
+  "car_center_x_m": -0.4668,
+  "steering_wheel": {
+   "model": "車のモデルのハンドル（Compact Car Part.032 の中の輪の形の塊）",
+   "outer_diameter_m": 0.37,
+   "wheel_part_shrink_relative_to_car": 0.7826,
+   "emblem_made_plain": {
+    "faces": 495,
+    "how": "ハンドルの真ん中（縁の半径の 42% 以内）の光沢の黒い飾りと色の付いた面を、つや消しの黒い無地に替えた"
+   },
+   "rim_center_radius_m": 0.1699,
+   "rim_tube_radius_m": 0.0151,
+   "center_world_m": [
+    0.0,
+    -0.3831,
+    1.1545
+   ],
+   "normal_world": [
+    -0.0,
+    0.9707,
+    0.2402
+   ]
+  },
+  "world_axes": "運転者は -Y（前）を向く。運転者の右 = -X、上 = +Z"
+ },
+ "camera": {
+  "view": "助手席側から運転者を見る",
+  "location_world_m": [
+   -0.8837,
+   0.3821,
+   1.5192
+  ],
+  "look_at_world_m": [
+   0.02,
+   -0.2579,
+   1.3292
+  ],
+  "lens_mm": 20,
+  "sensor_width_mm": 36,
+  "hidden_for_view": [
+   "助手席（Compact Car Part.039）は視点のまわりにあるので、カメラには写さない（影・映り込みは残す）"
+  ]
+ },
+ "image_px": {
+  "eyes": [
+   331.5,
+   190.6
+  ],
+  "phone_rear_camera_road": [
+   867.4,
+   232.9
+  ],
+  "phone_front_camera_driver": [
+   871.1,
+   227.1
+  ],
+  "phone_center": [
+   862.8,
+   260.6
+  ]
+ },
+ "hands": {
+  "L": {
+   "grip_point_m": [
+    0.1472,
+    -0.4154,
+    1.234
+   ],
+   "clock": "10 時",
+   "wrist_bend_deg(forearm_vs_hand)": 15.7,
+   "forearm_twist_deg_total": 3.2,
+   "forearm_twist_split": "lowerarm01 と lowerarm02 に半分ずつ",
+   "finger_curl_deg_[base,middle,tip]": {
+    "finger2": [
+     24.0,
+     27.6,
+     19.2
+    ],
+    "finger3": [
+     20.0,
+     23.0,
+     16.0
+    ],
+    "finger4": [
+     18.0,
+     20.7,
+     14.4
+    ],
+    "finger5": [
+     24.0,
+     27.6,
+     19.2
+    ]
+   },
+   "fingertip_bone_to_wheel_surface_mm": {
+    "2": 14.4,
+    "3": 17.9,
+    "4": 13.2,
+    "5": 13.1
+   },
+   "thumb_opened_deg": 10.0,
+   "thumb_bone_to_wheel_surface_mm": 11.8,
+   "rim_section_at_grip_mm[outward,toward_driver]": [
+    30.1,
+    54.6
+   ],
+   "knuckle_bone_to_wheel_surface_mm": 39.8,
+   "palm_center_to_wheel_surface_mm": 45.3,
+   "elbow_m": [
+    0.207,
+    -0.106,
+    1.202
+   ],
+   "shoulder_m": [
+    0.162,
+    0.114,
+    1.277
+   ]
+  },
+  "R": {
+   "grip_point_m": [
+    -0.1471,
+    -0.4154,
+    1.234
+   ],
+   "clock": "2 時",
+   "wrist_bend_deg(forearm_vs_hand)": 15.7,
+   "forearm_twist_deg_total": -3.2,
+   "forearm_twist_split": "lowerarm01 と lowerarm02 に半分ずつ",
+   "finger_curl_deg_[base,middle,tip]": {
+    "finger2": [
+     24.0,
+     27.6,
+     19.2
+    ],
+    "finger3": [
+     20.0,
+     23.0,
+     16.0
+    ],
+    "finger4": [
+     18.0,
+     20.7,
+     14.4
+    ],
+    "finger5": [
+     24.0,
+     27.6,
+     19.2
+    ]
+   },
+   "fingertip_bone_to_wheel_surface_mm": {
+    "2": 14.4,
+    "3": 17.9,
+    "4": 13.2,
+    "5": 13.1
+   },
+   "thumb_opened_deg": 10.0,
+   "thumb_bone_to_wheel_surface_mm": 11.8,
+   "rim_section_at_grip_mm[outward,toward_driver]": [
+    30.1,
+    54.6
+   ],
+   "knuckle_bone_to_wheel_surface_mm": 39.8,
+   "palm_center_to_wheel_surface_mm": 45.3,
+   "elbow_m": [
+    -0.207,
+    -0.106,
+    1.202
+   ],
+   "shoulder_m": [
+    -0.162,
+    0.114,
+    1.277
+   ]
+  }
+ },
+ "hand_check_images": {
+  "passenger": {
+   "image": "driving_hands_check_passenger_v4.png"
+  },
+  "top": {
+   "image": "driving_hands_check_top_v4.png",
+   "note": "真上からは手前 30 cm（車の天井）を写さない"
+  }
+ },
+ "interference_check": {
+  "hand_intersections_by_nearest_bone": {},
+  "wheel_x_body_triangle_pairs": {
+   "hand": 0,
+   "thigh": 0,
+   "other": 0
+  },
+  "rim_x_car_interior_triangle_pairs": 0,
+  "wheel_part_x_car_interior_triangle_pairs_incl_column": 238,
+  "body_x_driver_seat_triangle_pairs": 0,
+  "body_x_driver_seat_by_region": {},
+  "body_x_car_interior_triangle_pairs_by_part": {},
+  "wheel_to_thigh_min_distance_mm": 78.2,
+  "rim_to_car_interior_min_distance_mm": 120.5,
+  "hand_to_wheel_min_distance_mm": 1.7,
+  "note": "triangle_pairs = 交差している三角形の組の数（0 ならめり込みなし）。手は縁を握るので、手と縁は数 mm まで近づく",
+  "head_top_z_m": 1.6156,
+  "roof_inner_z_above_head_m": 1.6542,
+  "car_seat_cushion_to_roof_m": 0.9173
+ },
+ "driver_seat": {
+  "driver_seat_part": "Compact Car Part.041",
+  "butt_bottom_z_m": 0.7449,
+  "cushion_top_z_m": 0.7369,
+  "gap_seat_top_to_body_m": 0.008,
+  "gap_backrest_to_back_m": 0.01
+ },
+ "changes_v4": [
+  "車内を既存の車のモデル（SHC MCE 1、denniswoo1993、CGTrader、Royalty Free License（no AI））に置き換えた。スライドの絵にだけ使い、学習データには使わない",
+  "車はハンドルの外径が 0.37 m になるように縮め（倍率は car.model.scale）、Z まわりに 180° 回して前を -Y にした。モデルはもともと左ハンドルなので反転していない",
+  "前に自分で作った車内の部品（座席・ダッシュボード・メーター・画面・送風口・窓・柱・屋根・ドア・床・ボンネット）と Savino のハンドルは消し、ハンドルはモデルのものを使った",
+  "車の位置：運転席の座面と背もたれの形を光線で測り、座った体（服を含む）に座面が 8 mm、背もたれが 10 mm まで近づく位置に車を置いた（人は動かしていない）",
+  "手：前回と同じ握り方（左手 10 時・右手 2 時、手のひらで縁を包む、手の甲は運転者側の外向き、指は表面まで 9 mm で止める）。縁の円はモデルのハンドルの輪の形の塊から測った",
+  "車のカメラ：前の箱 2 つを消し、ダッシュボードの真ん中・フロントガラスの手前に、スマホ（15 × 7 × 0.8 cm）をホルダーで縦に立てた。画面は運転者へ向け、画面側のカメラが運転者、裏側のカメラが道路"
+ ],
+ "render": {
+  "engine": "CYCLES",
+  "device": "GPU",
+  "samples": 128,
+  "denoise": true,
+  "view_transform": "Standard"
+ }
+}

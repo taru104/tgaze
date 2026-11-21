@@ -75,11 +75,11 @@ def rot_bone(name, axis, deg):
 
 # 運転席に座る：太ももは少し上向きに前へ、すねは前へ伸ばしてペダルへ。背もたれに合わせて上体を少し後ろへ（人は -Y を向く。人の右 = -X）
 for s, sgn in (("L", 1), ("R", -1)):
-    rot_bone(f"upperleg01.{s}", "X", -98)
-    rot_bone(f"upperleg01.{s}", "Z", sgn * 5)
-    rot_bone(f"lowerleg01.{s}", "X", 62)
-rot_bone("spine05", "X", -8)
-rot_bone("neck01", "X", 6)
+    rot_bone(f"upperleg01.{s}", "X", float(os.environ.get("THIGH_DEG", "-86")))   # 太もも：水平より少し下向き（ハンドルの下を通す）
+    rot_bone(f"upperleg01.{s}", "Z", sgn * float(os.environ.get("LEG_SPREAD", "0")))   # 足の開き（足元が狭いので小さく）
+    rot_bone(f"lowerleg01.{s}", "X", float(os.environ.get("SHIN_DEG", "40")))   # すね：前へ出してペダルの方へ
+rot_bone("spine05", "X", float(os.environ.get("RECLINE_DEG", "-18")))   # 上体を背もたれに合わせてうしろへ
+rot_bone("neck01", "X", float(os.environ.get("NECK_DEG", "12")))      # 首で前を向き直す
 bw = lambda n: rig.matrix_world @ rig.pose.bones[n].head  # noqa: E731
 
 
@@ -210,177 +210,255 @@ lens_m = principled("Lens", (0.02, 0.03, 0.05), 0.05)
 carcam_m = principled("CarCamBody", (0.55, 0.56, 0.58), 0.35, 0.6)   # 黒いダッシュボードの上で見分けやすい明るいグレー
 carcam_ring = principled("CarCamRing", (0.85, 0.86, 0.88), 0.25, 1.0)
 
-# ---------------------------------------------------------------- 車内（運転者の x = 0、助手席は -X 側、車の中心は x = CX）
-CX = -0.37
-X_L, X_R = 0.40, CX * 2 - 0.40          # 運転席側の内壁 / 助手席側の内壁
-# 運転者と座席・床を、ハンドル・ダッシュボード・フロントガラス・屋根に対して うしろへ SHIFT_BACK、下へ SHIFT_DOWN 動かす
-# （めり込みを直すため。ここでは車の前側の部品を前・上へ同じ量だけずらして表す）
-SHIFT_BACK = float(os.environ.get("SHIFT_BACK", "0.05"))   # 太ももがハンドルにめり込まない量
-SHIFT_DOWN = float(os.environ.get("SHIFT_DOWN", "0.07"))
-wheel_c = np.array([0.0, float(cl.y) - 0.43 - SHIFT_BACK, float(cl.z) - 0.30 + SHIFT_DOWN])
-wheel_n = np.array([0.0, 0.88, 0.47])          # ハンドルの面は運転者の方を向き、少し上を向く
-wheel_n /= np.linalg.norm(wheel_n)
-wx_, wy_, _ = frame_axes(wheel_n)              # wx_ = 人の右（-X）、wy_ = ハンドル面の上
-WR = 0.17                                      # 縁の中心の半径（外径 約 37 cm）
-RIM_R = 0.015                                  # 縁の太さ 約 3 cm
-dash_z = float(wheel_c[2]) + 0.13
-dash_near = float(wheel_c[1]) - 0.16
-dash_far = dash_near - 0.55
-ROOF = float(cyc0[2]) + 0.27 + SHIFT_DOWN
+# ---------------------------------------------------------------- 車：既存のモデル（SHC MCE 1、denniswoo1993、CGTrader、Royalty Free License（no AI））
+# スライドの絵にだけ使う。学習データの生成には使わない。モデルのファイルはリポジトリに入れない（~/assets/car/ に置いたものを読む）。
+# .blend の中のスクリプトは実行しない（libraries.load で部品だけを読む）。
+import bmesh  # noqa: E402
+from mathutils.bvhtree import BVHTree  # noqa: E402
 
-# 座席（運転席・助手席）：座面・背もたれ・頭当ての面を、座った体（服・髪を含む）の形から決める（めり込まないように）
+CAR_BLEND = os.environ.get("CAR_BLEND", os.path.expanduser("~/assets/car/extracted/SHC MCE1/SHC MCE1 [blender 2.8 only].blend"))
+CAR_DIR = os.path.dirname(CAR_BLEND)
+WHEEL_PART, DRIVER_SEAT_PART, PASSENGER_SEAT_PART, ROOF_PART = "Compact Car Part.032", "Compact Car Part.041", "Compact Car Part.039", "Compact Car Part.092"
+WHEEL_OUTER_D = 0.37
+CAR_INFO = {"model": "BLENDER EEVEE Brandless Small 4 Door Hatchback（車名 SHC MCE 1）", "author": "denniswoo1993",
+            "url": "https://www.cgtrader.com/free-3d-models/car/car/blender-eevee-brandless-small-4-door-hatchback",
+            "license": "CGTrader Royalty Free License（no AI）。ページの表示は Free for personal and commercial use",
+            "use": "発表スライドの絵にだけ使う。学習データの生成・学習には使わない。モデルのファイルは公開リポジトリに置かない",
+            "file": "SHC MCE1 [blender 2.8 only].blend（~/assets/car/、リポジトリの外）",
+            "sha256_of_rar": "8074e3317ee72953c88a616543f1ab412fff50320d0683ef5da3442b2543c918"}
+with bpy.data.libraries.load(CAR_BLEND, link=False) as (src, dst):
+    dst.objects = [n for n in src.objects if n.startswith(("Compact Car Part", "Wheel"))]
+car_root = bpy.data.objects.new("CarRoot", None)
+scene.collection.objects.link(car_root)
+CAR_PARTS = []
+for ob in bpy.data.objects:
+    if ob.name.startswith(("Compact Car Part", "Wheel")) and ob.users_scene == ():
+        scene.collection.objects.link(ob)
+        if ob.parent is None:
+            ob.parent = car_root
+        CAR_PARTS.append(ob)
+for img in bpy.data.images:          # テクスチャは .blend と同じフォルダにある
+    if img.filepath and not os.path.exists(bpy.path.abspath(img.filepath)):
+        cand = os.path.join(CAR_DIR, os.path.basename(img.filepath.replace("\\", "/")))
+        if os.path.exists(cand):
+            img.filepath = cand
+upd()
+
+
+def part_world_verts(ob):
+    dg = bpy.context.evaluated_depsgraph_get()
+    ev = ob.evaluated_get(dg)
+    me = ev.to_mesh()
+    mw = np.array(ev.matrix_world)
+    v = np.array([vv.co for vv in me.vertices])
+    polys = [list(p.vertices) for p in me.polygons]
+    mats = [p.material_index for p in me.polygons]
+    ev.to_mesh_clear()
+    return (v @ mw[:3, :3].T + mw[:3, 3]) if len(v) else v, polys, mats
+
+
+# (1) ハンドルの縁を、ハンドルの部品の中の「輪の形の塊」として探す（車の元の座標で）
+wpart = bpy.data.objects[WHEEL_PART]
+wv0, wpolys, _ = part_world_verts(wpart)
+bm = bmesh.new()
+bm.from_mesh(wpart.data)                 # 元のメッシュのつながり（モディファイアなし：頂点の番号は wv0 と同じ）
+bm.verts.ensure_lookup_table()
+assert len(bm.verts) == len(wv0), (len(bm.verts), len(wv0))
+seen, comps = set(), []
+for v in bm.verts:
+    if v.index in seen:
+        continue
+    stack, comp = [v], []
+    seen.add(v.index)
+    while stack:
+        x = stack.pop()
+        comp.append(x.index)
+        for e in x.link_edges:
+            y = e.other_vert(x)
+            if y.index not in seen:
+                seen.add(y.index)
+                stack.append(y)
+    comps.append(comp)
+bm.free()
+best = None
+for comp in comps:
+    if len(comp) < 50:
+        continue
+    p = wv0[comp]
+    c0 = p.mean(0)
+    _, U = np.linalg.eigh((p - c0).T @ (p - c0))
+    n0 = U[:, 0]
+    rel = p - c0
+    r = np.linalg.norm(rel - np.outer(rel @ n0, n0), axis=1)
+    if r.min() > 0.75 * r.max() and (best is None or r.max() > best[3]):
+        best = (c0, n0, float(r.min()), float(r.max()), comp)
+rim_c0, rim_n0, rim_rin0, rim_rout0, RIM_COMP = best
+# ハンドルの真ん中のエンブレム（飾り）を無地にする：縁の中心から縁の半径の 42% 以内にある、光沢の黒い飾り（Glossy Black Trim）と
+# 色の付いた面（FrontColor）を、つや消しの黒い無地に替える
+plain = principled("EmblemPlain", (0.03, 0.03, 0.032), 0.6)
+wpart.data.materials.append(plain)
+_mi = len(wpart.data.materials) - 1
+EMBLEM_FACES = 0
+for poly in wpart.data.polygons:
+    mt = wpart.material_slots[poly.material_index].material
+    if mt is None or not mt.name.startswith(("Glossy Black Trim", "FrontColor")):
+        continue
+    c_ = wv0[list(poly.vertices)].mean(0)
+    rel_ = c_ - rim_c0
+    if float(np.linalg.norm(rel_ - (rel_ @ rim_n0) * rim_n0)) <= 0.42 * rim_rout0:
+        poly.material_index = _mi
+        EMBLEM_FACES += 1
+print("EMBLEM faces made plain:", EMBLEM_FACES)
+S_WHEEL = WHEEL_OUTER_D / (2 * rim_rout0)          # ハンドルの外径を 37 cm にする縮尺
+CAR_SCALE = S_WHEEL
+R_CAR = np.array([[-1.0, 0, 0], [0, -1.0, 0], [0, 0, 1.0]])      # Z まわりに 180°：車の前（元の +Y）を人の前（-Y）へ
+# 左ハンドルか：元の車の座標で、ハンドルが車の中心より「前を向いた人の左」（元の -X）にあるか
+_allv = np.concatenate([part_world_verts(o)[0] for o in CAR_PARTS if o.type == "MESH"])
+car_cx0 = float((_allv[:, 0].min() + _allv[:, 0].max()) / 2)
+LEFT_HAND_DRIVE = bool(rim_c0[0] < car_cx0)
+
+
+def car_xform(p, t):
+    return CAR_SCALE * (np.asarray(p) @ R_CAR.T) + t
+
+
+# (2) 運転席の形を光線で測る（座面の上の高さ・背もたれの前の面）。車は縮めて回しただけ（t = 0）の座標
+seat0, seat_polys, _ = part_world_verts(bpy.data.objects[DRIVER_SEAT_PART])
+roof0, roof_polys, _ = part_world_verts(bpy.data.objects[ROOF_PART])
+
+
+SEAT_SHRINK = float(os.environ.get("SEAT_SHRINK", "0.88"))   # 運転席だけ小さく（車を頭が入る大きさに拡大したぶん、座面の奥行きが長すぎるため）
+SEAT_PIVOT = None                                              # 縮める中心（t = 0 の座標）：背もたれの前の面と座面の上が交わる所
+
+
+def measure_seat():
+    global seat_s, seat_bvh, scx, sz0, sz1, sy0, sy1
+    seat_s = car_xform(seat0, np.zeros(3))
+    if SEAT_PIVOT is not None:
+        seat_s = SEAT_PIVOT + (seat_s - SEAT_PIVOT) * SEAT_SHRINK
+    seat_bvh = BVHTree.FromPolygons([Vector(tuple(p)) for p in seat_s], seat_polys, all_triangles=False)
+    scx = float((seat_s[:, 0].min() + seat_s[:, 0].max()) / 2)
+    sz0, sz1 = float(seat_s[:, 2].min()), float(seat_s[:, 2].max())
+    sy0, sy1 = float(seat_s[:, 1].min()), float(seat_s[:, 1].max())
+
+
+def seat_top(y):          # 座面の上（x = 座席の真ん中、前後 y）
+    hit = seat_bvh.ray_cast(Vector((scx, y, sz1 + 1.0)), Vector((0, 0, -1)))
+    return hit[0].z if hit[0] is not None else None
+
+
+def seat_back_front(z):   # 背もたれの前の面（高さ z）。人の前は -Y なので、前から +Y 向きに光線を当てる
+    hit = seat_bvh.ray_cast(Vector((scx, sy0 - 1.0, z)), Vector((0, 1, 0)))
+    return hit[0].y if hit[0] is not None else None
+
+
+def cushion_and_roof():
+    """座面（お尻が乗る後ろ寄り）の高さと、その真上の天井の内側の高さ（t = 0 の座標）。"""
+    bfl = seat_back_front(sz0 + 0.55 * (sz1 - sz0))
+    cus = [(y, seat_top(y)) for y in np.arange(sy0 + 0.03, bfl - 0.02, 0.01)]
+    cus = [(y, z) for y, z in cus if z is not None]
+    rear = [(y, z) for y, z in cus if y > sy0 + 0.65 * (bfl - sy0)]
+    ct = float(np.median([z for _, z in rear])) if rear else float(max(z for _, z in cus))
+    yr = float(np.mean([y for y, _ in rear])) if rear else (sy0 + bfl) / 2
+    roof_s = car_xform(roof0, np.zeros(3))
+    rb = BVHTree.FromPolygons([Vector(tuple(p)) for p in roof_s], roof_polys, all_triangles=False)
+    h = rb.ray_cast(Vector((scx, yr, ct + 0.05)), Vector((0, 0, 1)))
+    return bfl, ct, (h[0].z if h[0] is not None else None)
+
+
+# (3) 座った体の形（お尻・太ももの裏の低さ、背中のうしろの面）
 _bv = np.concatenate([eval_world_verts(o) for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("Human") and o.visible_get()])
 _py = float(pel.y)
-_m = (np.abs(_bv[:, 0]) < 0.22) & (_bv[:, 1] > _py - 0.30) & (_bv[:, 1] < _py + 0.12)
-SEAT = float(_bv[_m][:, 2].min()) - 0.010                     # 座面の上 = お尻・太ももの裏のいちばん低いところ
-def _back_y(z0, z1):
-    mm = (np.abs(_bv[:, 0]) < 0.20) & (_bv[:, 2] > z0) & (_bv[:, 2] < z1)
-    return float(_bv[mm][:, 1].max()) + 0.012
-SB0 = _back_y(SEAT + 0.04, SEAT + 0.25)                       # 背もたれの前の面（下）
-SB1 = max(_back_y(SEAT + 0.45, SEAT + 0.66), SB0 + 0.02)      # 背もたれの前の面（上）
-HR_Y = _back_y(SEAT + 0.68, SEAT + 1.2) + 0.012               # 頭当ての前の面（頭・髪のうしろ）
-SEAT_INFO = {"cushion_top_z_m": round(SEAT, 4), "back_front_y_bottom_m": round(SB0, 4), "back_front_y_top_m": round(SB1, 4), "headrest_front_y_m": round(HR_Y, 4)}
-for nm, x0 in (("Driver", 0.0), ("Passenger", CX * 2)):
-    box(f"{nm}SeatCushion", x0 - 0.27, x0 + 0.27, _py - 0.38, SB0, SEAT - 0.12, SEAT, seat_m)
-    v = []
-    for zz, yy in ((SEAT - 0.02, SB0 + (SB0 - SB1) * 0.03), (SEAT + 0.68, SB1)):
-        for xx in (x0 - 0.26, x0 + 0.26):
-            v += [(xx, yy, zz), (xx, yy + 0.10, zz)]
-    add_mesh(f"{nm}SeatBack", [v[0], v[2], v[6], v[4], v[1], v[3], v[7], v[5]],
-             [(0, 1, 2, 3), (4, 7, 6, 5), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)], seat_m)
-    box(f"{nm}Headrest", x0 - 0.13, x0 + 0.13, HR_Y, HR_Y + 0.08, SEAT + 0.72, SEAT + 0.92, seat_m)
-    box(f"{nm}HeadrestPost", x0 - 0.06, x0 + 0.06, (SB1 + HR_Y) / 2 + 0.03, (SB1 + HR_Y) / 2 + 0.045, SEAT + 0.66, SEAT + 0.73, trim)
-box("Floor", X_R, X_L, dash_far - 0.4, float(pel.y) + 1.0, FLOOR - 0.03, FLOOR, dark)
-box("CenterConsole", CX - 0.10, CX + 0.10, dash_near - 0.05, float(pel.y) + 0.05, FLOOR, SEAT + 0.05, trim)
-# ダッシュボード：横から見た断面（運転者側の面 → 上の面はフロントガラスへ向かって下がる）を車の幅に伸ばし、角を丸める
-DASH_DROP = 0.10                                    # 上の面がフロントガラス側で下がる量
-
-
-def dash_top_z(y):
-    """ダッシュボードの上の面の高さ（y = 前後位置）。"""
-    t = min(1.0, max(0.0, (dash_near - 0.06 - y) / max(1e-6, dash_near - 0.06 - dash_far)))
-    return dash_z - DASH_DROP * t
-
-
-prof = [(dash_near, dash_z - 0.30), (dash_near, dash_z - 0.03), (dash_near - 0.06, dash_z),
-        (dash_far, dash_z - DASH_DROP), (dash_far, dash_z - 0.30)]
-dv = [(x, y, z) for x in (X_R, X_L) for (y, z) in prof]
-npf = len(prof)
-dfaces = [tuple(range(npf))[::-1], tuple(range(npf, 2 * npf))]
-dfaces += [(i, (i + 1) % npf, npf + (i + 1) % npf, npf + i) for i in range(npf)]
-dash = add_mesh("Dashboard", dv, dfaces, dark)
-bev = dash.modifiers.new("Round", "BEVEL")
-bev.width, bev.segments, bev.limit_method = 0.025, 4, "ANGLE"
-box("DashLower", X_R, X_L, dash_far, dash_near - 0.10, FLOOR, dash_z - 0.30, dark)
-# メーター：ハンドルの奥に、ひさしの付いたメーターの台と丸いメーター 2 つ
-gauge_y = dash_near - 0.035
-box("InstrumentPod", -0.17, 0.17, dash_near - 0.16, gauge_y, dash_z - 0.04, dash_z + 0.12, dark)
-hood = add_mesh("InstrumentHood", [(-0.19, dash_near - 0.17, dash_z + 0.12), (0.19, dash_near - 0.17, dash_z + 0.12),
-                                   (0.19, dash_near + 0.02, dash_z + 0.105), (-0.19, dash_near + 0.02, dash_z + 0.105),
-                                   (-0.19, dash_near - 0.17, dash_z + 0.135), (0.19, dash_near - 0.17, dash_z + 0.135),
-                                   (0.19, dash_near + 0.02, dash_z + 0.12), (-0.19, dash_near + 0.02, dash_z + 0.12)],
-                [(0, 1, 2, 3), (7, 6, 5, 4), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)], dark)
-hb = hood.modifiers.new("Round", "BEVEL")
-hb.width, hb.segments = 0.006, 3
-gauge_face = principled("GaugeFace", (0.02, 0.02, 0.025), 0.3)
-gauge_ring = principled("GaugeRing", (0.75, 0.76, 0.78), 0.3, 0.8)
-gauge_mark = emission_only("GaugeMark", (0.85, 0.88, 0.92), 0.8)
-for k, gx in enumerate((-0.075, 0.075)):
-    gc = np.array([gx, gauge_y + 0.001, dash_z + 0.045])
-    cylinder_between(f"Gauge{k}", gc, gc + np.array([0, 0.004, 0]), 0.052, gauge_face, 40)
-    ring = [gc + np.array([0, 0.005, 0]) + 0.052 * np.array([math.cos(t), 0, math.sin(t)]) for t in np.linspace(0, 2 * math.pi, 48, endpoint=False)]
-    tube(f"GaugeRing{k}", ring, 0.004, gauge_ring, closed=True)
-    for t in np.linspace(math.radians(-210), math.radians(30), 9):     # 目盛り
-        d_ = np.array([math.cos(t), 0, math.sin(t)])
-        tube(f"GaugeTick{k}", [gc + np.array([0, 0.0055, 0]) + d_ * 0.040, gc + np.array([0, 0.0055, 0]) + d_ * 0.047], 0.0012, gauge_mark)
-    nd = np.array([math.cos(math.radians(-60 - 40 * k)), 0, math.sin(math.radians(-60 - 40 * k))])
-    tube(f"GaugeNeedle{k}", [gc + np.array([0, 0.006, 0]), gc + np.array([0, 0.006, 0]) + nd * 0.040], 0.0016,
-         emission_only(f"Needle{k}", (0.95, 0.35, 0.10), 1.0))
-# 中央の画面（電源の切れた黒い画面。ダッシュボード中央、運転者の方へ少し向ける）
-scr_c = np.array([CX, dash_near + 0.01, dash_z + 0.02])
-scr_n = np.array([0.25, 1.0, 0.18])
-scr_n /= np.linalg.norm(scr_n)
-sx_, sy_, _ = frame_axes(scr_n)
-oriented_box("CenterScreenBody", scr_c, sx_, sy_, scr_n, 0.27, 0.17, 0.02, dark)
-oriented_box("CenterScreen", scr_c + scr_n * 0.0105, sx_, sy_, scr_n, 0.25, 0.15, 0.001, principled("ScreenOff", (0.004, 0.004, 0.005), 0.08))
-# 送風口 2 つ（画面の左右、運転者側の面）
-vent_m = principled("Vent", (0.012, 0.012, 0.014), 0.5)
-for k, vx in enumerate((CX - 0.20, CX + 0.20)):
-    vz = dash_z - 0.075
-    vb = box(f"Vent{k}", vx - 0.055, vx + 0.055, dash_near - 0.01, dash_near + 0.006, vz - 0.03, vz + 0.03, vent_m)
-    vbm = vb.modifiers.new("Round", "BEVEL")
-    vbm.width, vbm.segments = 0.008, 3
-    for j in range(4):
-        zz = vz - 0.021 + j * 0.014
-        box(f"VentSlat{k}", vx - 0.048, vx + 0.048, dash_near + 0.004, dash_near + 0.010, zz - 0.002, zz + 0.002, trim)
-# ハンドル：OpenGameArt「Steering wheel」（作者 Savino、CC0）の high.obj を読み込み、外径 約 37 cm に縮めて置く。
-# 縁の円・管の太さは読み込んだ形から測り、手の握り（WR, RIM_R）にそのまま使う。前に自分で作った縁・スポーク・パッドは作らない。
-WHEEL_OBJ = os.environ.get("WHEEL_OBJ", os.path.join(HERE, "assets", "steering_wheel_savino_high.obj"))
-WHEEL_OUTER_D = 0.37
-bpy.ops.wm.obj_import(filepath=WHEEL_OBJ, forward_axis="Y", up_axis="Z")      # 座標はファイルのまま
-wheel_obj = [o for o in bpy.context.selected_objects if o.type == "MESH"][0]
-wheel_obj.name = "SteeringWheel_Savino"
-mv = np.array([wheel_obj.matrix_world @ v.co for v in wheel_obj.data.vertices])
-cm = mv - mv.mean(0)
-_, U = np.linalg.eigh(cm.T @ cm)
-n_m = U[:, 0]                                          # いちばん薄い向き = ハンドルの面の法線
-rad = lambda pts, c0: np.linalg.norm((pts - c0) - np.outer((pts - c0) @ n_m, n_m), axis=1)  # noqa: E731
-c_m = mv.mean(0)
-r_all = rad(mv, c_m)
-rim_v = mv[r_all > 0.80 * r_all.max()]                 # 縁の頂点
-c_m = rim_v.mean(0)                                    # 縁の円の中心
-r_rim = rad(rim_v, c_m)
-_e1 = np.cross(n_m, [1.0, 0, 0]) if abs(n_m[0]) < 0.9 else np.cross(n_m, [0, 1.0, 0])
-_e1 /= np.linalg.norm(_e1)
-_e2 = np.cross(n_m, _e1)
-_ang = np.arctan2((rim_v - c_m) @ _e2, (rim_v - c_m) @ _e1)
-_sec = np.floor((_ang + np.pi) / (2 * np.pi) * 72).astype(int)
-_w = [(r_rim[_sec == k].max(), r_rim[_sec == k].min()) for k in range(72) if (_sec == k).sum() >= 3]
-outer_m = float(np.median([o for o, _ in _w]))                # 角度ごとの外側・内側の中央値（スポークの付け根を除く）
-inner_m = float(np.median([i for _, i in _w]))
-hub = mv[r_all < 0.25 * r_all.max()]
-if len(hub) and float(((hub - c_m) @ n_m).mean()) > 0:  # 中央の出っぱり（コラム側）は奥（ダッシュボード側）
-    n_m = -n_m                                         # n_m = 運転者の方
-up_m = np.array([0.0, -1.0, 0.0]) - (np.array([0.0, -1.0, 0.0]) @ n_m) * n_m
-up_m /= np.linalg.norm(up_m)                          # モデルの -Y を 12 時に（太いスポークが下側に来る向き。+Y だと 10 時・2 時の握る所に来る）
-SCALE = WHEEL_OUTER_D / (2 * outer_m)
-M_model = np.stack([np.cross(up_m, n_m), up_m, n_m], 1)
-M_world = np.stack([np.cross(wy_, wheel_n), wy_, wheel_n], 1)
-Rw = M_world @ M_model.T
-Mw = np.eye(4)
-Mw[:3, :3] = Rw * SCALE
-Mw[:3, 3] = wheel_c - Rw @ (c_m * SCALE)
-wheel_obj.matrix_world = Matrix(Mw.tolist())
-wheel_obj.data.materials.clear()
-wheel_obj.data.materials.append(principled("WheelGrip", (0.03, 0.03, 0.032), 0.55))
-for poly in wheel_obj.data.polygons:
-    poly.use_smooth = True
-WR = SCALE * (outer_m + inner_m) / 2                  # 縁の管の中心の半径
-RIM_R = SCALE * (outer_m - inner_m) / 2               # 縁の管の半径
-hub_depth = float(SCALE * max(0.0, -((mv - c_m) @ n_m).min()))
-WHEEL_INFO = {"model": "Steering wheel", "author": "Savino", "url": "https://opengameart.org/content/steering-wheel",
-              "file": "high.obj", "license": "CC0", "scale": round(SCALE, 4), "outer_diameter_m": round(2 * SCALE * outer_m, 4),
-              "rim_center_radius_m": round(WR, 4), "rim_tube_radius_m": round(RIM_R, 4), "depth_behind_rim_m": round(hub_depth, 4)}
-print("WHEEL", WHEEL_INFO)
-cylinder_between("SteeringColumn", wheel_c - wheel_n * max(0.03, hub_depth - 0.01), wheel_c - wheel_n * 0.32 - np.array([0, 0, 0.05]), 0.035, dark)
-# フロントガラス・屋根・柱・運転席のドア
-ws_bot = dash_far + 0.02
-ws_top_y = float(cyc0[1]) - 0.55 - SHIFT_BACK
-add_mesh("Windshield", [(X_R, ws_bot, dash_z - DASH_DROP), (X_L, ws_bot, dash_z - DASH_DROP), (X_L, ws_top_y, ROOF), (X_R, ws_top_y, ROOF)], [(0, 1, 2, 3)], glass)
-box("Roof", X_R - 0.05, X_L + 0.05, ws_top_y, float(pel.y) + 1.0, ROOF, ROOF + 0.04, principled("Headliner", (0.72, 0.70, 0.66), 0.9))
-for xp in (X_R, X_L):
-    tube(f"APillar{xp:+.2f}", [(xp, ws_bot, dash_z - DASH_DROP), (xp, ws_top_y, ROOF)], 0.04, trim)
-box("DriverDoorLower", X_L, X_L + 0.06, dash_far, float(pel.y) + 0.6, FLOOR, dash_z - 0.05, principled("DoorTrim", (0.16, 0.16, 0.17), 0.6))
-add_mesh("DriverWindow", [(X_L + 0.03, dash_near, dash_z - 0.05), (X_L + 0.03, float(pel.y) + 0.5, dash_z - 0.05),
-                          (X_L + 0.03, float(pel.y) + 0.5, ROOF), (X_L + 0.03, ws_top_y, ROOF)], [(0, 1, 2, 3)], glass)
-tube("BPillar", [(X_L + 0.03, float(pel.y) + 0.5, dash_z - 0.05), (X_L + 0.03, float(pel.y) + 0.5, ROOF)], 0.05, trim)
-box("Hood", X_R - 0.05, X_L + 0.05, dash_far - 1.2, dash_far, dash_z - 0.16, dash_z - 0.12, principled("HoodPaint", (0.20, 0.30, 0.45), 0.35, 0.2))
+_cen = np.abs(_bv[:, 0]) < 0.15
+butt = _bv[_cen & (_bv[:, 1] > _py - 0.22) & (_bv[:, 1] < _py + 0.10)]
+butt_z = float(butt[:, 2].min())
+back_bins = []
+for zb in np.arange(butt_z + 0.15, butt_z + 0.60, 0.04):
+    m_ = _cen & (_bv[:, 2] >= zb) & (_bv[:, 2] < zb + 0.04)
+    if m_.sum():
+        back_bins.append((zb + 0.02, float(_bv[m_][:, 1].max())))
+# 頭が天井に当たらない縮尺：座面から天井までが「座った体の頭の高さ + 余裕 HEAD_CLEAR」になるまで車を大きくする
+HEAD_CLEAR = 0.04
+head_h = float(_bv[:, 2].max()) - butt_z                     # 座面（お尻の下）から頭（髪・頭の機材を含む）のいちばん上まで
+measure_seat()
+bf_low, cushion_top, roof_z = cushion_and_roof()
+S_HEAD = CAR_SCALE * (head_h + 0.008 + HEAD_CLEAR) / (roof_z - cushion_top) if roof_z else CAR_SCALE
+if S_HEAD > CAR_SCALE:
+    CAR_SCALE = S_HEAD
+    measure_seat()
+    bf_low, cushion_top, roof_z = cushion_and_roof()
+WHEEL_SHRINK = S_WHEEL / CAR_SCALE                           # ハンドルの部品だけ、外径 37 cm に戻す
+SEAT_PIVOT = np.array([scx, bf_low, cushion_top])
+measure_seat()
+bf_low, cushion_top, roof_z = cushion_and_roof()
+# (4) 車の位置 t：座面が体に 8 mm、背もたれが背中に 10 mm まで近づく位置（めり込まない）。人は動かさない
+tx = 0.0 - scx
+tz = butt_z - 0.008 - cushion_top
+ty = _py + 0.05 - (sy0 + bf_low) / 2
+for _ in range(4):
+    need_ty = [bb + 0.010 - f for zc, bb in back_bins for f in [seat_back_front(zc - tz)] if f is not None and f > bf_low - 0.08]
+    if need_ty:
+        ty = max(need_ty)
+T_CAR = np.array([tx, ty, tz])
+M = np.eye(4)
+M[:3, :3] = CAR_SCALE * R_CAR
+M[:3, 3] = T_CAR
+car_root.matrix_world = Matrix(M.tolist())
+upd()
+# 運転席を前へずらす（実際の車と同じ）：座席と人はそのまま、座席以外の車を人の方（+Y）へ動かし、ハンドルを手の届く所へ
+_wc = car_xform(rim_c0, T_CAR)
+_cl = (bw("clavicle.L") + bw("clavicle.R")) / 2
+SEAT_SLIDE = float(os.environ.get("SEAT_SLIDE", str(max(0.0, (float(_cl.y) - 0.50) - float(_wc[1])))))
+_seat_ob = bpy.data.objects[DRIVER_SEAT_PART]
+_sp = SEAT_PIVOT + T_CAR                                     # 運転席を縮める中心（世界の座標）
+_seat_ob.matrix_world = Matrix.Translation(Vector(tuple(map(float, _sp)))) @ Matrix.Scale(SEAT_SHRINK, 4) @ Matrix.Translation(Vector(tuple(map(float, -_sp)))) @ _seat_ob.matrix_world
+upd()
+for ob in CAR_PARTS:
+    if ob is not _seat_ob:
+        ob.matrix_world = Matrix.Translation(Vector((0.0, SEAT_SLIDE, 0.0))) @ ob.matrix_world
+upd()
+_wc = _wc + np.array([0.0, SEAT_SLIDE, 0.0])
+wpart.matrix_world = Matrix.Translation(Vector(tuple(map(float, _wc)))) @ Matrix.Scale(WHEEL_SHRINK, 4) @ Matrix.Translation(Vector(tuple(map(float, -_wc)))) @ wpart.matrix_world
+upd()
+# (5) ハンドル：縁の円（中心・向き・半径・太さ）。向きは運転者の方
+wheel_c = car_xform(rim_c0, T_CAR) + np.array([0.0, SEAT_SLIDE, 0.0])
+wheel_n = R_CAR @ rim_n0
+wheel_n /= np.linalg.norm(wheel_n)
+if wheel_n @ (cyc0 - wheel_c) < 0:
+    wheel_n = -wheel_n
+wx_, wy_, _ = frame_axes(wheel_n)              # wx_ = 人の右（-X）、wy_ = ハンドル面の上
+WR = S_WHEEL * (rim_rin0 + rim_rout0) / 2
+RIM_R = S_WHEEL * (rim_rout0 - rim_rin0) / 2
+wheel_obj = wpart
+WHEEL_INFO = {"model": "車のモデルのハンドル（" + WHEEL_PART + " の中の輪の形の塊）", "outer_diameter_m": round(2 * S_WHEEL * rim_rout0, 4),
+              "wheel_part_shrink_relative_to_car": round(WHEEL_SHRINK, 4),
+              "emblem_made_plain": {"faces": EMBLEM_FACES, "how": "ハンドルの真ん中（縁の半径の 42% 以内）の光沢の黒い飾りと色の付いた面を、つや消しの黒い無地に替えた"},
+              "rim_center_radius_m": round(WR, 4), "rim_tube_radius_m": round(RIM_R, 4), "center_world_m": [round(float(x), 4) for x in wheel_c],
+              "normal_world": [round(float(x), 4) for x in wheel_n]}
+CAR_INFO.update({"driver_seat_slid_forward_m": round(SEAT_SLIDE, 4), "driver_seat_shrink": SEAT_SHRINK, "scale": round(CAR_SCALE, 4), "scale_if_wheel_37cm": round(S_WHEEL, 4), "scale_for_headroom": round(S_HEAD, 4),
+                 "headroom_note": "ハンドルの外径 37 cm に合わせた縮尺では、座面から天井までが座った人の頭の高さより低い（頭が天井に入る）。"
+                                  "そこで車は頭が入る大きさまで拡大し、ハンドルの部品だけを外径 37 cm に縮めた",
+                 "seat_cushion_to_roof_m": round(float(roof_z - cushion_top), 4) if roof_z else None, "seated_head_height_m": round(head_h, 4), "rotation_z_deg": 180, "translation_m": [round(float(x), 4) for x in T_CAR],
+                 "left_hand_drive_as_modeled": LEFT_HAND_DRIVE, "mirrored": False,
+                 "length_m_after_scale": round(float(CAR_SCALE * (_allv[:, 1].max() - _allv[:, 1].min())), 3),
+                 "height_m_after_scale": round(float(CAR_SCALE * (_allv[:, 2].max() - _allv[:, 2].min())), 3)})
+if not LEFT_HAND_DRIVE:
+    raise SystemExit("右ハンドルのモデル：左右反転が要る（このスクリプトはまだ反転していない）")
+SEAT_INFO = {"driver_seat_part": DRIVER_SEAT_PART, "butt_bottom_z_m": round(butt_z, 4), "cushion_top_z_m": round(cushion_top + tz, 4), "gap_seat_top_to_body_m": 0.008, "gap_backrest_to_back_m": 0.010}
+print("CAR", json.dumps(CAR_INFO, ensure_ascii=False), json.dumps(WHEEL_INFO))
+# 車の大きさ・位置（世界の座標）
+_allw = car_xform(_allv, T_CAR)
+CAR_GROUND_Z = float(min(part_world_verts(o)[0][:, 2].min() for o in CAR_PARTS if o.name.startswith("Wheel")))   # 置いたあとの世界の座標
+CX = float((_allw[:, 0].min() + _allw[:, 0].max()) / 2)          # 車の中心の x
+ROOF = float(_allw[:, 2].max()) - 0.06
+_ps = part_world_verts(bpy.data.objects[PASSENGER_SEAT_PART])[0]                 # 置いたあとの世界の座標
+PCX = float((_ps[:, 0].min() + _ps[:, 0].max()) / 2)              # 助手席の真ん中の x
 
 # ---------------------------------------------------------------- 外：道路・草地・空
 road = principled("Asphalt", (0.17, 0.17, 0.18), 0.85)
 grass = principled("Grass", (0.24, 0.40, 0.18), 0.9)
 paint = principled("LinePaint", (0.95, 0.95, 0.92), 0.6)
-gz = FLOOR - 0.25
+gz = CAR_GROUND_Z                     # 道路の面 = 車のタイヤの下
 box("Road", -5.0, 3.0, -400, 30, gz - 0.02, gz, road)
 box("GrassL", 3.0, 60, -400, 30, gz - 0.03, gz - 0.005, grass)
 box("GrassR", -60, -5.0, -400, 30, gz - 0.03, gz - 0.005, grass)
@@ -538,7 +616,7 @@ for s, sgn in (("L", 1), ("R", -1)):
     for fi in (2, 3, 4, 5):
         tot = [0.0, 0.0, 0.0]
         segs = [f"finger{fi}-{j}.{s}" for j in (1, 2, 3)]
-        FING_CLEAR = 0.0090                                     # 指の骨（指の中心）とハンドルの表面の距離の下限（指の厚みの半分 + 余裕）
+        FING_CLEAR = 0.0110                                     # 指の骨（指の中心）とハンドルの表面の距離の下限（指の厚みの半分 + 余裕）
         dist_now = lambda: min(min(wheel_dist(T(sg)), wheel_dist(P(sg))) for sg in segs[1:])  # noqa: E731
         for step in range(80):                                  # 2° ずつ曲げ、近づきすぎたら 1 段戻して止める
             moved = False
@@ -606,14 +684,39 @@ def min_dist(verts_a, bvh_b):
     return best
 
 
+REGION_BONES = {"head": ["head", "neck03"], "torso": ["spine01", "spine02", "spine03", "spine04"], "arm": ["upperarm02.L", "upperarm02.R", "lowerarm01.L", "lowerarm01.R"],
+                "hand": ["wrist.L", "wrist.R"], "thigh": ["upperleg02.L", "upperleg02.R"], "shin": ["lowerleg01.L", "lowerleg01.R", "lowerleg02.L", "lowerleg02.R"],
+                "foot": ["foot.L", "foot.R"]}
+
+
+def car_overlap_by_region(body_b, body_v, body_polys, objs):
+    segs = [(rg, Vector(tuple(P(b))), Vector(tuple(T(b)))) for rg, bl in REGION_BONES.items() for b in bl]
+    out = {}
+    for o in objs:
+        pairs = body_b.overlap(bvh_of([o])[0])
+        if not pairs:
+            continue
+        cnt = {}
+        for ib, _ in pairs:
+            cen = sum((body_v[i] for i in body_polys[ib]), Vector()) / len(body_polys[ib])
+            best = min(segs, key=lambda sg: (cen - (sg[1] + (sg[2] - sg[1]) * max(0.0, min(1.0, (cen - sg[1]).dot(sg[2] - sg[1]) / max((sg[2] - sg[1]).length_squared, 1e-12))))).length)
+            cnt[best[0]] = cnt.get(best[0], 0) + 1
+        out[o.name] = cnt
+    return out
+
+
 def interference_report():
     upd()
     wheel_b, wheel_v = bvh_of([wheel_obj])
+    _rim_set = set(RIM_COMP)
+    _wvw = [wheel_obj.matrix_world @ v.co for v in wheel_obj.data.vertices]
+    rim_b = BVHTree.FromPolygons(_wvw, [list(p.vertices) for p in wheel_obj.data.polygons if all(i in _rim_set for i in p.vertices)], all_triangles=False)
+    rim_v = [_wvw[i] for i in RIM_COMP]
     body = [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("Human") and o.visible_get()]
     body_b, body_v = bvh_of(body)
-    dash_objs = [bpy.data.objects[n] for n in ("Dashboard", "InstrumentPod", "InstrumentHood", "DashLower") if n in bpy.data.objects]
+    dash_objs = [o for o in CAR_PARTS if o is not wheel_obj and o.name not in (DRIVER_SEAT_PART, PASSENGER_SEAT_PART) and not o.name.startswith("Wheel")]
     dash_b, _ = bvh_of(dash_objs)
-    seat_objs = [bpy.data.objects[n] for n in ("DriverSeatCushion", "DriverSeatBack", "DriverHeadrest")]
+    seat_objs = [bpy.data.objects[DRIVER_SEAT_PART]]
     seat_b, _ = bvh_of(seat_objs)
     # 太もも：体のうち、腰より前・ハンドルより下の頂点
     hipy = float(bw("root").y)
@@ -656,10 +759,13 @@ def interference_report():
     rep = {
         "hand_intersections_by_nearest_bone": rep_bones,
         "wheel_x_body_triangle_pairs": cls,
-        "wheel_x_dashboard_triangle_pairs": len(wheel_b.overlap(dash_b)),
+        "rim_x_car_interior_triangle_pairs": len(rim_b.overlap(dash_b)),
+        "wheel_part_x_car_interior_triangle_pairs_incl_column": len(wheel_b.overlap(dash_b)),
         "body_x_driver_seat_triangle_pairs": len(body_b.overlap(seat_b)),
+        "body_x_driver_seat_by_region": car_overlap_by_region(body_b, body_v, body_polys, seat_objs),
+        "body_x_car_interior_triangle_pairs_by_part": car_overlap_by_region(body_b, body_v, body_polys, dash_objs),
         "wheel_to_thigh_min_distance_mm": round(min_dist(thigh_v, wheel_b) * 1000, 1) if thigh_v else None,
-        "wheel_to_dashboard_min_distance_mm": round(min_dist(wheel_v[::4], dash_b) * 1000, 1),
+        "rim_to_car_interior_min_distance_mm": round(min_dist(rim_v, dash_b) * 1000, 1),
         "hand_to_wheel_min_distance_mm": round(min_dist(hand_v, wheel_b) * 1000, 1) if hand_v else None,
     }
     # 手と縁の交差は、指・手のひらがハンドルの面に触れている分も数える（指の先・腹が縁の表面に触れると 0 mm）
@@ -668,6 +774,15 @@ def interference_report():
 
 
 INTERF = interference_report()
+# 頭と天井：頭（髪・頭の機材を含む）のいちばん上と、その真上の天井の内側の面の高さ
+_hv = np.concatenate([eval_world_verts(o) for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("Human") and o.visible_get()])
+_top = _hv[np.argmax(_hv[:, 2])]
+_roof = bpy.data.objects["Compact Car Part.092"]
+_rb = bvh_of([_roof])[0]
+_hit = _rb.ray_cast(Vector((float(_top[0]), float(_top[1]), float(_top[2]) - 0.30)), Vector((0, 0, 1)))
+INTERF["head_top_z_m"] = round(float(_top[2]), 4)
+INTERF["roof_inner_z_above_head_m"] = round(float(_hit[0].z), 4) if _hit[0] is not None else None
+INTERF["car_seat_cushion_to_roof_m"] = round(float(_hit[0].z) - (cushion_top + tz), 4) if _hit[0] is not None else None
 print("INTERF", json.dumps(INTERF, ensure_ascii=False))
 
 # ---------------------------------------------------------------- 目を前の道路へ（自車線の 25 m 先）
@@ -690,20 +805,88 @@ lat = r_head @ np.array([1.0, 0.0, 0.0])
 upv = r_head @ np.array([0.0, 0.0, 1.0])
 gear = {}
 # 車のカメラ 2 台（向きは仮）
-fc = np.array([CX, ws_bot + 0.07, dash_top_z(ws_bot + 0.07) + 0.017])   # フロントガラスの下の中央（ダッシュボードの上）、道路向き
-fd = np.array([0.0, -1.0, 0.0])
-ax, ay, _ = frame_axes(fd)
-oriented_box("FrontCamera", fc, ax, ay, fd, 0.04, 0.03, 0.03, carcam_m)        # 4×3×3 cm の箱＋丸いレンズ
-cylinder_between("FrontCameraLens", fc + fd * 0.015, fc + fd * 0.024, 0.009, lens_m)
-cylinder_between("FrontCameraLensRing", fc + fd * 0.0145, fc + fd * 0.0185, 0.0115, carcam_ring)
-bc = scr_c + sy_ * 0.10 + scr_n * 0.018                             # 中央の画面の上、運転者向き
-bd = (cyc - bc) / np.linalg.norm(cyc - bc)
-ax, ay, _ = frame_axes(bd)
-oriented_box("BackCamera", bc, ax, ay, bd, 0.04, 0.03, 0.03, carcam_m)
-cylinder_between("BackCameraLens", bc + bd * 0.015, bc + bd * 0.024, 0.009, lens_m)
-cylinder_between("BackCameraLensRing", bc + bd * 0.0145, bc + bd * 0.0185, 0.0115, carcam_ring)
-gear["front_camera"] = {"location_world_m": [round(float(x), 4) for x in fc], "direction": [0, -1, 0], "where": "フロントガラスの下の中央", "facing": "道路（仮）"}
-gear["back_camera"] = {"location_world_m": [round(float(x), 4) for x in bc], "direction": [round(float(x), 4) for x in bd], "where": "ダッシュボード中央の画面の上", "facing": "運転者（仮）"}
+# 車のカメラ：ダッシュボードの真ん中、フロントガラスの手前に、スマホ 1 台をホルダーで縦に立てる（約 15 × 7 × 0.8 cm）。
+# 画面は運転者に向ける。画面側のカメラが運転者を、裏側のカメラが道路を撮る。
+dg = bpy.context.evaluated_depsgraph_get()
+
+
+def is_glass(ob, face_index):
+    try:
+        me = ob.data
+        mi = me.polygons[face_index].material_index
+        mt = ob.material_slots[mi].material
+        return mt is not None and "glass" in mt.name.lower()
+    except Exception:
+        return False
+
+
+def cast_skip_glass(o, d, max_hits=20):
+    """o から d へ光線を当て、ガラス以外の最初の当たり（車の部品だけ）を返す。"""
+    o, d = Vector(tuple(map(float, o))), Vector(tuple(map(float, d))).normalized()
+    for _ in range(max_hits):
+        hit, loc, nor, fi, ob, _ = scene.ray_cast(dg, o, d)
+        if not hit:
+            return None, None
+        if ob in CAR_PARTS and not is_glass(ob, fi):
+            return np.array(loc), ob
+        o = loc + d * 1e-4
+    return None, None
+
+
+# ダッシュボードの上の面を、車の真ん中の x で、運転者の前から前へたどる。フロントガラスの手前（上に 17 cm 以上の空き）でいちばん前の所に置く
+phone_base, dash_hit_obj = None, None
+for yy in np.arange(float(wheel_c[1]) - 0.10, float(wheel_c[1]) - 0.60, -0.01):
+    top, ob_ = cast_skip_glass((CX, yy, ROOF - 0.02), (0, 0, -1))
+    if top is None or top[2] < float(wheel_c[2]) - 0.30 or top[2] > float(wheel_c[2]) + 0.35:   # 床・座席や、天井・ミラーは使わない
+        continue
+    hit_up = scene.ray_cast(dg, Vector((CX, yy, float(top[2]) + 0.005)), Vector((0, 0, 1)))
+    clear = (hit_up[1].z - float(top[2])) if hit_up[0] else 1.0
+    if clear >= 0.045 + 0.150 + 0.010:                    # ホルダーの台 + スマホの高さ + 余裕
+        phone_base, dash_hit_obj = top, ob_                  # 前へたどって、空きが足りるいちばん前の所
+if phone_base is None:
+    raise SystemExit("スマホを置ける場所がダッシュボードの上に見つからない")
+to_drv = cyc - phone_base
+to_drv[2] = 0
+to_drv /= np.linalg.norm(to_drv)
+tilt = math.radians(12)                                   # 画面を少し上へ向ける（運転者の目の方）
+ph_n = to_drv * math.cos(tilt) + np.array([0, 0, 1.0]) * math.sin(tilt)   # 画面の向き
+ph_up = np.array([0, 0, 1.0]) - (np.array([0, 0, 1.0]) @ ph_n) * ph_n
+ph_up /= np.linalg.norm(ph_up)
+ph_x = np.cross(ph_up, ph_n)
+PH_H, PH_W, PH_T = 0.150, 0.070, 0.008
+holder_h = 0.045                                          # ホルダーの台の高さ（スマホの下の端まで）
+ph_c = phone_base + np.array([0, 0, holder_h]) + ph_up * (PH_H / 2)
+phone_m = principled("PhoneBody", (0.04, 0.04, 0.045), 0.35, 0.3)
+glass_m = principled("PhoneScreen", (0.01, 0.012, 0.02), 0.05)
+screen_glow = emission_only("PhoneScreenGlow", (0.10, 0.16, 0.26), 0.6)
+holder_m = principled("HolderPlastic", (0.08, 0.08, 0.09), 0.5)
+ph = oriented_box("Phone", ph_c, ph_x, ph_up, ph_n, PH_W, PH_H, PH_T, phone_m)
+pbev = ph.modifiers.new("Round", "BEVEL")
+pbev.width, pbev.segments = 0.004, 3
+oriented_box("PhoneScreen", ph_c + ph_n * (PH_T / 2 + 0.0003), ph_x, ph_up, ph_n, PH_W - 0.006, PH_H - 0.008, 0.0004, screen_glow)
+# 画面側のカメラ（運転者を撮る）：画面の上の端の真ん中
+fcam = ph_c + ph_up * (PH_H / 2 - 0.009) + ph_n * (PH_T / 2 + 0.0008)
+cylinder_between("PhoneFrontCam", fcam, fcam + ph_n * 0.0006, 0.0022, lens_m, 16)
+# 裏側のカメラ（道路を撮る）：裏の上の角に出っぱり＋レンズ 2 つ
+bump_c = ph_c + ph_up * (PH_H / 2 - 0.020) - ph_x * (PH_W / 2 - 0.020) - ph_n * (PH_T / 2 + 0.0015)
+oriented_box("PhoneCamBump", bump_c, ph_x, ph_up, -ph_n, 0.030, 0.030, 0.003, phone_m)
+for k_, off in enumerate((0.007, -0.007)):
+    lc = bump_c + ph_up * off - ph_n * 0.0015
+    cylinder_between(f"PhoneRearLens{k_}", lc, lc - ph_n * 0.0015, 0.0045, lens_m, 24)
+    cylinder_between(f"PhoneRearLensRing{k_}", lc + ph_n * 0.0002, lc - ph_n * 0.0012, 0.0055, principled("LensRing", (0.6, 0.6, 0.62), 0.25, 1.0), 24)
+# ホルダー：ダッシュボードに貼る台、首、スマホの裏の板、左右からはさむ爪
+cylinder_between("HolderBase", phone_base - np.array([0, 0, 0.002]), phone_base + np.array([0, 0, 0.010]), 0.032, holder_m, 32)
+back_pt = ph_c - ph_n * (PH_T / 2 + 0.006) - ph_up * 0.02
+cylinder_between("HolderNeck", phone_base + np.array([0, 0, 0.010]), back_pt, 0.008, holder_m, 16)
+oriented_box("HolderPlate", ph_c - ph_n * (PH_T / 2 + 0.003) - ph_up * 0.02, ph_x, ph_up, ph_n, 0.050, 0.060, 0.006, holder_m)
+for sgn_ in (1, -1):
+    oriented_box(f"HolderClaw{sgn_}", ph_c + ph_x * sgn_ * (PH_W / 2 + 0.002) - ph_up * 0.02, ph_x, ph_up, ph_n, 0.006, 0.030, PH_T + 0.010, holder_m)
+gear["phone"] = {"where": "ダッシュボードの真ん中（車の中心の x）、フロントガラスの手前。ホルダーで縦に立てる", "size_m": [PH_W, PH_H, PH_T],
+                 "center_world_m": [round(float(x), 4) for x in ph_c], "screen_normal_world": [round(float(x), 4) for x in ph_n],
+                 "front_camera": {"location_world_m": [round(float(x), 4) for x in fcam], "facing": "運転者（画面側）"},
+                 "rear_camera": {"location_world_m": [round(float(x), 4) for x in bump_c], "facing": "道路（裏側）"},
+                 "dashboard_part_under": dash_hit_obj.name if dash_hit_obj else None}
+fc, bc = bump_c, fcam            # 絵の上の位置（image_px）用：fc = 道路側のカメラ、bc = 運転者側のカメラ
 if not NOGEAR:
     # 頭に着ける視線計測器：頭を一周するバンド、額のカメラ（前向き）、こめかみから伸びる細いアームの先に目を撮るカメラ
     dg = bpy.context.evaluated_depsgraph_get()
@@ -759,10 +942,10 @@ fill.size, fill.energy = 0.6, 25.0
 fo = bpy.data.objects.new("CabinFill", fill)
 scene.collection.objects.link(fo)
 fo.visible_camera = False
-fo.location = (CX * 2 + 0.1, float(cyc[1]) - 0.2, ROOF - 0.05)
+fo.location = (PCX + 0.1, float(cyc[1]) - 0.2, ROOF - 0.05)
 fo.rotation_euler = (Vector(tuple(map(float, cyc))) - fo.location).to_track_quat("-Z", "Y").to_euler()
 
-pos = Vector((CX * 2 + 0.05, float(cyc[1]) + 0.32, float(cyc[2]) + 0.02))       # 助手席の頭のあたり、少しうしろ
+pos = Vector((PCX + 0.05, float(cyc[1]) + 0.32, float(cyc[2]) + 0.02))       # 助手席の頭のあたり、少しうしろ
 look = Vector((0.02, float(cyc[1]) - 0.32, float(cyc[2]) - 0.17))
 cd = bpy.data.cameras.new("PassengerView")
 cd.lens, cd.sensor_width, cd.sensor_fit, cd.clip_start = 20, 36, "HORIZONTAL", 0.02
@@ -772,8 +955,8 @@ cam.location = pos
 cam.rotation_euler = (look - pos).to_track_quat("-Z", "Y").to_euler()
 scene.camera = cam
 for ob in bpy.data.objects:      # 視点の手前にある助手席の背もたれ・頭当ては描かない
-    if ob.name.startswith(("PassengerSeatBack", "PassengerHeadrest")):
-        ob.hide_render = True
+    if ob.name == PASSENGER_SEAT_PART:      # 助手席は視点のまわりにあるので、カメラには写さない（影・映り込みは残す）
+        ob.visible_camera = False
 
 scene.render.engine = "CYCLES"
 prefs = bpy.context.preferences.addons["cycles"].preferences
@@ -810,7 +993,7 @@ if HANDCHECK:            # 手のアップ：助手席側から／真上から�
              "top": (hc + np.array([0.0, 0.10, 0.55]), hc + np.array([0.0, 0.0, -0.01]), 35)}
     for vn, (cpos, clook, lens_) in views.items():
         cdd = bpy.data.cameras.new(f"HandCheck_{vn}")
-        cdd.lens, cdd.sensor_width, cdd.clip_start = lens_, 36, 0.01
+        cdd.lens, cdd.sensor_width, cdd.clip_start = lens_, 36, (0.30 if vn == "top" else 0.01)   # 真上からは、手前 30 cm（車の天井）を写さない
         co_ = bpy.data.objects.new(f"HandCheck_{vn}", cdd)
         scene.collection.objects.link(co_)
         co_.location = Vector(tuple(map(float, cpos)))
@@ -851,24 +1034,19 @@ info = {
     "gaze": {"target": "前の道路（自車線、約 25 m 先）", "target_world_m": vec(a), "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik",
              "residual_deg": {s: round(v, 4) for s, v in resid.items()}, "eye_center_world_m": {s: vec(v) for s, v in eye_c.items()}},
     "gear": gear,
-    "car": {"drive": "左ハンドル（運転席は車の左、助手席は運転者の右 = -X）", "car_center_x_m": CX, "steering_wheel_center_m": vec(wheel_c),
-            "steering_wheel_radius_m": WR, "center_screen_m": vec(scr_c), "world_axes": "運転者は -Y（前）を向く。運転者の右 = -X、上 = +Z"},
+    "car": {"drive": "左ハンドル（運転席は車の左、助手席は運転者の右 = -X）", "model": CAR_INFO, "car_center_x_m": round(CX, 4),
+            "steering_wheel": WHEEL_INFO, "world_axes": "運転者は -Y（前）を向く。運転者の右 = -X、上 = +Z"},
     "camera": {"view": "助手席側から運転者を見る", "location_world_m": vec(pos), "look_at_world_m": vec(look), "lens_mm": 20, "sensor_width_mm": 36,
-               "hidden_for_view": ["助手席の背もたれと頭当て（視点の手前にあるため描いていない）"]},
-    "image_px": {"eyes": px(cyc), "front_camera": px(fc), "back_camera": px(bc)},
-    "hands": HAND_LOG, "hand_check_images": check_imgs, "steering_wheel_model": WHEEL_INFO, "interference_check": INTERF, "driver_seat_from_body": SEAT_INFO, "person_and_seat_shift_m": {"back": SHIFT_BACK, "down": SHIFT_DOWN},
-    "changes_v2": {
-        "arms_and_hands": ["腕：IK（chain 4 = upperarm01, upperarm02, lowerarm01, lowerarm02）で手首を置き、肘のポールターゲットを肘の下・外側に置いた。そのあと FK に焼き付けて IK は外した。肩（clavicle, shoulder01）は動かしていない",
-                           "手の向き：手の長さ方向は前腕の向きから縁の接線方向の成分を 6 割除いたもの（手首の曲がりを小さく。縁は手のひらを少し斜めに横切る）。手のひらは縁（ハンドルの内側・奥）へ、手の甲は運転者側の外向き。縁の管の中心は指の付け根の手のひら側",
-                           "前腕のねじれ：手首の骨の軸まわりのねじれを lowerarm01 と lowerarm02 に半分ずつ入れ、wrist には残りの振りだけを入れた",
-                           "指：4 本の指（finger2〜5）の付け根・真ん中・先の 3 関節を、手のひら側へ 3° ずつ（比 1 : 1.15 : 0.8）曲げ、2° ずつ曲げ、指の骨（指の中心）が読み込んだハンドルの表面から 9.5 mm より近づいたら 1 段戻して止めた。手を置く位置は、握る所の縁の断面をモデルの頂点から測って決めた",
-                           "親指：縁の運転者側に沿わせ、付け根 12°・真ん中 8° だけ曲げて軽く伸ばした"],
-        "interior_added": ["ハンドル：縁の中心の半径 0.17 m（外径 約 37 cm）、縁の太さ 3 cm、中央のパッド、3 時・9 時・6 時のスポーク 3 本。面は運転者側へ傾けたまま",
-                           "メーター：ハンドルの奥にひさし付きのメーターの台と、丸いメーター 2 つ（目盛り・針付き）",
-                           "ダッシュボード：上の面をフロントガラスへ向かって 10 cm 下げ、角を丸めた（ベベル）。中央の画面の左右に送風口 2 つ",
-                           "真ん中の画面：電源の切れた黒い画面（何も映さない）",
-                           "運転席の背もたれと頭当て（前の版から付いている。形は変えていない）",
-                           "front / back camera：4×3×3 cm の明るいグレーの箱に丸いレンズ（金属の輪付き）。置き場所と向きは前の版と同じ（front はダッシュボードの上の面が下がったぶん、上の面に載るように高さだけ合わせた）"]},
+               "hidden_for_view": ["助手席（" + PASSENGER_SEAT_PART + "）は視点のまわりにあるので、カメラには写さない（影・映り込みは残す）"]},
+    "image_px": {"eyes": px(cyc), "phone_rear_camera_road": px(fc), "phone_front_camera_driver": px(bc), "phone_center": px(ph_c)},
+    "hands": HAND_LOG, "hand_check_images": check_imgs, "interference_check": INTERF, "driver_seat": SEAT_INFO,
+    "changes_v4": [
+        "車内を既存の車のモデル（SHC MCE 1、denniswoo1993、CGTrader、Royalty Free License（no AI））に置き換えた。スライドの絵にだけ使い、学習データには使わない",
+        "車はハンドルの外径が 0.37 m になるように縮め（倍率は car.model.scale）、Z まわりに 180° 回して前を -Y にした。モデルはもともと左ハンドルなので反転していない",
+        "前に自分で作った車内の部品（座席・ダッシュボード・メーター・画面・送風口・窓・柱・屋根・ドア・床・ボンネット）と Savino のハンドルは消し、ハンドルはモデルのものを使った",
+        "車の位置：運転席の座面と背もたれの形を光線で測り、座った体（服を含む）に座面が 8 mm、背もたれが 10 mm まで近づく位置に車を置いた（人は動かしていない）",
+        "手：前回と同じ握り方（左手 10 時・右手 2 時、手のひらで縁を包む、手の甲は運転者側の外向き、指は表面まで 9 mm で止める）。縁の円はモデルのハンドルの輪の形の塊から測った",
+        "車のカメラ：前の箱 2 つを消し、ダッシュボードの真ん中・フロントガラスの手前に、スマホ（15 × 7 × 0.8 cm）をホルダーで縦に立てた。画面は運転者へ向け、画面側のカメラが運転者、裏側のカメラが道路"],
     "render": {"engine": "CYCLES", "device": "GPU", "samples": SAMPLES, "denoise": True, "view_transform": "Standard"},
 }
 jp = os.path.join(OUT_DIR, f"driving_passenger_view{tag}_{RES_X}x{RES_Y}.json")
