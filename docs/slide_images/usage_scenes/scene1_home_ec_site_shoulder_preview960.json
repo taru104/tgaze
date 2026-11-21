@@ -1,0 +1,142 @@
+{
+ "image": "scene1_home_ec_site_shoulder_preview960.png",
+ "size_px": [
+  960,
+  540
+ ],
+ "origin": "top-left, x right, y down",
+ "note": "スライド用のイメージ。学習には使っていない（学習データの生成・学習はしていない）",
+ "scene": {
+  "id": 1,
+  "name": "home_ec_site",
+  "view": "shoulder"
+ },
+ "person": {
+  "generator": "scripts/generate_gaze_dataset_v3.py GeneratorV3.build() (Phase 8 v3) + clothes + shoes; seated by rotating leg / spine / neck bones; arms by Blender IK",
+  "identity": 247,
+  "appearance": {
+   "sex_for_appearance": "male",
+   "race_for_appearance": "asian",
+   "skin": "middleage_asian_male",
+   "hair": "short02",
+   "iris": "brownlight",
+   "eyebrows": "eyebrow012",
+   "eyelashes": "eyelashes03",
+   "eyelid": {
+    "upper_gain": 0.7166171168810691,
+    "lower_gain": 0.41627880400346307,
+    "upper_offset_deg": 0.48444682563116004
+   }
+  },
+  "hair": "short02",
+  "clothes": "male_casualsuit01",
+  "shoes": "shoes01",
+  "hands": "keyboard"
+ },
+ "screen": {
+  "image": "screen_market.png",
+  "image_size_px": [
+   2560,
+   1664
+  ],
+  "gaze_target": "スマートウォッチ",
+  "gaze_target_uv_image": [
+   0.3804,
+   0.4402
+  ],
+  "uv_note": "画面画像の左上が原点、右・下が正、[0,1]",
+  "gaze_target_world_m": [
+   0.0348,
+   -0.7171,
+   1.3246
+  ],
+  "display_center_world_m": [
+   -0.0,
+   -0.7129,
+   1.3141
+  ],
+  "display_normal_world": [
+   -0.0,
+   0.9272,
+   0.3746
+  ],
+  "lid_angle_deg": 112.0,
+  "eye_to_screen_center_m": 0.6
+ },
+ "eyes": {
+  "aim": "create_macbook_gaze_poc.aim_with_mpfb_ik",
+  "residual_deg": {
+   "left": 0.0003,
+   "right": 0.0004
+  },
+  "center_world_m": {
+   "left": [
+    0.03,
+    -0.236,
+    1.6783
+   ],
+   "right": [
+    -0.03,
+    -0.236,
+    1.6783
+   ]
+  }
+ },
+ "room": {
+  "floor_z_m": 0.4809,
+  "desk_top_z_m": 1.2009,
+  "desk_height_m": 0.72,
+  "seat_z_m": 0.9242,
+  "props": [
+   "mug",
+   "plant"
+  ],
+  "world_axes": "人は -Y を向く。人の右 = -X、上 = +Z"
+ },
+ "camera": {
+  "view": "shoulder",
+  "location_world_m": [
+   -0.95,
+   1.314,
+   2.0983
+  ],
+  "look_at_world_m": [
+   -0.0,
+   -0.6652,
+   1.3305
+  ],
+  "lens_mm": 55,
+  "sensor_width_mm": 36,
+  "distance_to_eyes_m": 1.866,
+  "rotation_euler_rad": [
+   1.2344,
+   0.0,
+   -2.6941
+  ]
+ },
+ "image_px": {
+  "gaze_point": [
+   474.5,
+   260.9
+  ],
+  "eye_left": [
+   312.1,
+   108.3
+  ],
+  "eye_right": [
+   353.1,
+   113.0
+  ],
+  "display_center": [
+   492.8,
+   270.8
+  ]
+ },
+ "render": {
+  "engine": "CYCLES",
+  "device": "GPU",
+  "samples": 128,
+  "denoise": true,
+  "view_transform": "Standard"
+ }
+}

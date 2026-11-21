@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>オンライン授業（架空）</title>
+<style>
+:root { --bg: #f5f7fc; --ink: #13194a; --sub: #5a6286; --line: #e3e7f3; --violet: #6a2cff; --blue: #2f6bff;
+  font-family: "Hiragino Sans", "Noto Sans JP", "Noto Sans CJK JP", system-ui, sans-serif; color: var(--ink); }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); }
+body { display: grid; grid-template-rows: 56px 1fr; width: 1280px; height: 832px; overflow: hidden; }
+header { display: flex; align-items: center; gap: 18px; padding: 0 22px; background: #fff; border-bottom: 1px solid var(--line); }
+header b { font-size: 18px; }
+header b span { color: var(--violet); }
+header .crumb { color: var(--sub); font-size: 14px; }
+header .live { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #d0303f; }
+header .live i { width: 9px; height: 9px; border-radius: 50%; background: #ff4d5e; }
+header .me { width: 30px; height: 30px; border-radius: 50%; background: #dfe4f4; }
+main { display: grid; grid-template-columns: 1fr 300px; gap: 16px; padding: 16px; min-height: 0; }
+.left { display: grid; grid-template-rows: auto 1fr auto; gap: 12px; min-height: 0; }
+.title h1 { margin: 0; font-size: 21px; }
+.title p { margin: 4px 0 0; color: var(--sub); font-size: 13px; }
+.video { position: relative; border-radius: 14px; overflow: hidden; background: #1f3b30; min-height: 0;
+  box-shadow: inset 0 0 0 10px #6b4b2e, inset 0 0 0 12px #4a321d; }
+.board { position: absolute; inset: 22px 22px 46px 22px; color: #f3f6ee; font-family: "Noto Sans JP", sans-serif; }
+.board h2 { margin: 6px 0 0 10px; font-size: 26px; font-weight: 700; letter-spacing: .04em; }
+.board .eq { position: absolute; left: 14px; top: 64px; font-size: 22px; line-height: 1.7; }
+.board .eq u { text-decoration: none; border-bottom: 2px solid #ffe27a; }
+#boardFig { position: absolute; left: 41%; top: 6%; width: 52%; height: 84%; }
+.teacher { position: absolute; right: 18px; bottom: 54px; width: 120px; height: 90px; border-radius: 10px; background: #e9edf8;
+  display: grid; place-items: end center; overflow: hidden; border: 2px solid #fff; }
+.teacher i { display: block; width: 46px; height: 46px; border-radius: 50%; background: #b9c2dd; margin-bottom: -6px; box-shadow: 0 52px 0 18px #b9c2dd; }
+.ctrl { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  background: rgba(0, 0, 0, .45); color: #fff; font-size: 13px; }
+.ctrl .bar { flex: 1; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .3); }
+.ctrl .bar i { display: block; width: 46%; height: 100%; border-radius: 3px; background: #7a9bff; }
+.notes { display: flex; gap: 10px; }
+.notes span { padding: 8px 14px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--sub); }
+.notes span.on { background: var(--violet); color: #fff; border-color: var(--violet); }
+aside { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+aside b { font-size: 15px; }
+.toc { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+.toc li { padding: 8px 10px; border-radius: 8px; color: var(--sub); }
+.toc li.on { background: #efe8ff; color: var(--violet); font-weight: 700; }
+.chat { flex: 1; display: grid; align-content: end; gap: 8px; font-size: 13px; }
+.chat p { margin: 0; padding: 8px 10px; border-radius: 10px; background: #f3f5fd; }
+.chat p em { display: block; font-style: normal; font-size: 11px; color: var(--sub); }
+.ask { padding: 9px 12px; border-radius: 999px; background: #f1f3fa; color: var(--sub); font-size: 13px; }
+</style>
+</head>
+<body>
+<header><b>まなび<span>ルーム</span></b><span class="crumb">データサイエンス入門 ＞ 第4回</span>
+  <span class="live"><i></i>ライブ授業中</span><span class="me"></span></header>
+<main>
+  <div class="left">
+    <div class="title"><h1>第4回　回帰直線を引いてみよう</h1><p>担当：講師　／　受講者 42 名</p></div>
+    <div class="video">
+      <div class="board">
+        <h2>最小二乗法</h2>
+        <div class="eq">y = <u>a</u>x + <u>b</u><br>誤差の2乗の和<br>Σ (yᵢ − (axᵢ + b))²<br>を最小にする</div>
+        <svg id="boardFig" viewBox="0 0 400 300" fill="none" stroke="#f3f6ee" stroke-linecap="round">
+          <path d="M30 270 H385 M30 270 V15" stroke-width="3"/>
+          <path d="M378 263 L388 270 L378 277 M23 22 L30 12 L37 22" stroke-width="3"/>
+          <path d="M45 245 L370 55" stroke="#ffe27a" stroke-width="4"/>
+          <g fill="#f3f6ee" stroke="none">
+            <circle cx="70" cy="200" r="6"/><circle cx="105" cy="228" r="6"/><circle cx="140" cy="170" r="6"/>
+            <circle cx="175" cy="188" r="6"/><circle cx="210" cy="132" r="6"/><circle cx="245" cy="150" r="6"/>
+            <circle cx="280" cy="98" r="6"/><circle cx="315" cy="118" r="6"/><circle cx="350" cy="62" r="6"/>
+          </g>
+          <path d="M105 228 V209 M175 188 V168 M245 150 V127 M315 118 V86" stroke="#ff9e9e" stroke-width="2.5" stroke-dasharray="5 5"/>
+          <text x="372" y="292" fill="#f3f6ee" stroke="none" font-size="20">x</text>
+          <text x="6" y="22" fill="#f3f6ee" stroke="none" font-size="20">y</text>
+        </svg>
+      </div>
+      <div class="teacher"><i></i></div>
+      <div class="ctrl"><span>▶</span><span>23:41</span><div class="bar"><i></i></div><span>52:00</span><span>字幕</span></div>
+    </div>
+    <div class="notes"><span class="on">板書</span><span>資料</span><span>小テスト</span><span>メモ</span></div>
+  </div>
+  <aside>
+    <b>この回の目次</b>
+    <ul class="toc"><li>1. 前回のふりかえり</li><li>2. 散布図と相関</li><li class="on">3. 最小二乗法</li><li>4. 演習</li></ul>
+    <b>質問・コメント</b>
+    <div class="chat">
+      <p><em>受講者A</em>点線は何を表していますか？</p>
+      <p><em>講師</em>実際の値と直線との差（誤差）です</p>
+      <p><em>受講者B</em>なるほど、わかりました</p>
+    </div>
+    <div class="ask">質問を入力…</div>
+  </aside>
+</main>
+<script>
+const fig = document.getElementById("boardFig").getBoundingClientRect();
+fetch("/log?" + encodeURIComponent(JSON.stringify({ mode: "lecture", target: "板書の図",
+  u: (fig.left + fig.width / 2) / 1280, v: (fig.top + fig.height / 2) / 832,
+  box: [fig.left / 1280, fig.top / 832, fig.right / 1280, fig.bottom / 832], W: innerWidth, H: innerHeight, dpr: devicePixelRatio })));
+</script>
+</body>
+</html>
